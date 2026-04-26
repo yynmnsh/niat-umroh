@@ -448,19 +448,14 @@
 </head>
 <body>
 
-<!-- ══ LOADING ══ -->
 <div id="loadingOverlay">
   <div class="load-moon">🌙</div>
   <p>Memuat NiatUmroh...</p>
   <div class="spinner"></div>
 </div>
 
-<!-- ══ TOAST ══ -->
 <div id="toast"></div>
 
-<!-- ══════════════════════════════════════════
-     LOGIN SCREEN
-══════════════════════════════════════════ -->
 <div id="loginScreen" class="screen" style="display:flex;">
   <div class="login-deco ld1"></div>
   <div class="login-deco ld2"></div>
@@ -475,8 +470,8 @@
     </div>
 
     <div class="form-group">
-      <label>Email</label>
-      <input type="email" id="loginEmail" placeholder="email@contoh.com" autocomplete="email">
+      <label>Username</label>
+      <input type="text" id="loginUsername" placeholder="ahmadfauzi" autocomplete="off">
     </div>
     <div class="form-group">
       <label>Password</label>
@@ -489,9 +484,6 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     USER DASHBOARD
-══════════════════════════════════════════ -->
 <div id="userScreen" class="screen">
   <nav class="top-nav">
     <div class="nav-brand">
@@ -506,7 +498,6 @@
 
   <div class="main-content">
 
-    <!-- Hero Card -->
     <div class="hero-card">
       <div class="hero-greeting">Assalamu'alaikum 👋</div>
       <div class="hero-name" id="userHeroName">—</div>
@@ -538,7 +529,6 @@
       </div>
     </div>
 
-    <!-- Stats Grid -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon si-teal">📅</div>
@@ -562,7 +552,6 @@
       </div>
     </div>
 
-    <!-- Add Savings -->
     <div class="card">
       <div class="card-header">
         <div>
@@ -583,12 +572,11 @@
       </div>
       <div class="form-group" style="margin-top:10px;margin-bottom:0">
         <label>Catatan (opsional)</label>
-        <input type="text" id="savingsNote" placeholder="Gajian bulan ini, dll."
+        <input type="text" id="savingsNote" placeholder="Gaji, rezeki nomplok, dll."
           onkeypress="if(event.key==='Enter')addSavings()">
       </div>
     </div>
 
-    <!-- History -->
     <div class="card">
       <div class="card-header">
         <div class="card-title">Riwayat Tabungan</div>
@@ -602,12 +590,9 @@
       </div>
     </div>
 
-  </div><!-- /main-content -->
+  </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     ADMIN DASHBOARD
-══════════════════════════════════════════ -->
 <div id="adminScreen" class="screen">
   <nav class="top-nav">
     <div class="nav-brand">
@@ -626,7 +611,6 @@
       <p>Pantau tabungan umroh seluruh anggota</p>
     </div>
 
-    <!-- Stats -->
     <div class="admin-stats-row">
       <div class="admin-stat">
         <div class="admin-stat-icon">👥</div>
@@ -645,7 +629,6 @@
       </div>
     </div>
 
-    <!-- Users -->
     <div class="section-header">
       <div class="section-title">Daftar Anggota</div>
       <button class="btn-add-user" onclick="openAddUserModal()">＋ Tambah Anggota</button>
@@ -660,9 +643,6 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     MODAL: ADD USER
-══════════════════════════════════════════ -->
 <div id="addUserModal" class="modal-overlay" onclick="closeOnBg(event,'addUserModal')">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -673,8 +653,8 @@
       <input type="text" id="newName" placeholder="Ahmad Fauzi">
     </div>
     <div class="form-group">
-      <label>Email (untuk login)</label>
-      <input type="email" id="newEmail" placeholder="ahmad@email.com">
+      <label>Username (tanpa spasi)</label>
+      <input type="text" id="newUsername" placeholder="ahmadfauzi">
     </div>
     <div class="form-group">
       <label>Password</label>
@@ -709,15 +689,11 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     MODAL: USER DETAIL (admin)
-══════════════════════════════════════════ -->
 <div id="userDetailModal" class="modal-overlay" onclick="closeOnBg(event,'userDetailModal')">
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="detailName">—</div>
 
-    <!-- Progress bar -->
     <div class="progress-wrap" style="margin-bottom:18px;">
       <div class="progress-label" style="color:var(--text-soft)">
         <span>Progress Tabungan</span>
@@ -733,20 +709,6 @@
 
     <hr class="divider">
 
-    <!-- Reset Password -->
-    <div style="font-size:13px;font-weight:700;color:var(--text-mid);margin-bottom:12px;">
-      🔐 Reset Password
-    </div>
-    <p style="font-size:12px;color:var(--text-soft);margin-bottom:14px;">
-      Kirim email reset password ke alamat email anggota. Anggota kemudian bisa mengatur password baru via link yang dikirim.
-    </p>
-    <button class="btn-ghost" onclick="sendResetEmail()" style="width:100%">
-      Kirim Email Reset Password
-    </button>
-
-    <hr class="divider">
-
-    <!-- History -->
     <div style="font-size:13px;font-weight:700;color:var(--text-mid);margin-bottom:12px;">
       📋 Riwayat Tabungan
     </div>
@@ -754,26 +716,18 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     FIREBASE + APP LOGIC
-══════════════════════════════════════════ -->
 <script type="module">
 import { initializeApp }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import {
-  getAuth, signInWithEmailAndPassword, signOut,
-  onAuthStateChanged, sendPasswordResetEmail
+  getAuth, signInAnonymously, onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {
   getFirestore, doc, setDoc, getDoc, getDocs,
-  collection, addDoc, query, orderBy, limit,
+  collection, addDoc, query, orderBy, limit, where,
   updateDoc, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-// ═══════════════════════════════════════════
-//  🔧 FIREBASE CONFIG — GANTI DENGAN MILIK ANDA!
-//     Lihat README.md untuk panduan setup
-// ═══════════════════════════════════════════
 const firebaseConfig = {
   apiKey: "AIzaSyA5yOuh_8MFzY72mx1YDzBhnRBaHo9ao-A",
   authDomain: "niat-umroh.firebaseapp.com",
@@ -787,21 +741,14 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// ═══════════════════════════════════════════
-//  STATE
-// ═══════════════════════════════════════════
-let currentUser    = null;
+// STATE
+let currentUser    = null; // Menyimpan ID sesi manual
 let userProfile    = null;
 let usersCache     = [];
 let selectedDetail = null;
 
-// ═══════════════════════════════════════════
-//  UTILS
-// ═══════════════════════════════════════════
-function rp(n) {
-  if (n == null) return '—';
-  return 'Rp\u00a0' + Math.round(n).toLocaleString('id-ID');
-}
+// UTILS
+function rp(n) { return n == null ? '—' : 'Rp\u00a0' + Math.round(n).toLocaleString('id-ID'); }
 function rpShort(n) {
   if (n == null) return '—';
   if (n >= 1e9) return 'Rp\u00a0' + (n/1e9).toFixed(1) + 'M';
@@ -819,10 +766,7 @@ function daysSince(ts) {
   const d = ts?.toDate ? ts.toDate() : new Date(ts);
   return Math.max(1, Math.floor((Date.now() - d.getTime()) / 86400000) + 1);
 }
-function pctOf(saved, target) {
-  if (!target) return 0;
-  return Math.min(100, (saved / target) * 100);
-}
+function pctOf(saved, target) { return target ? Math.min(100, (saved / target) * 100) : 0; }
 function statusOf(saved, target, dailyTarget) {
   const pct = pctOf(saved, target);
   if (pct >= 100) return { label:'✅ Siap Berangkat Umroh!', cls:'ready' };
@@ -860,15 +804,31 @@ function hideLoading() {
 }
 
 // ═══════════════════════════════════════════
-//  AUTH
+//  AUTH (Anonymous + Sesi Manual via Firestore)
 // ═══════════════════════════════════════════
 onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUser = user;
+  if (!user) {
+    // Selalu login secara anonymous agar bisa akses database
     try {
-      const snap = await getDoc(doc(db, 'userProfiles', user.uid));
+      await signInAnonymously(auth);
+    } catch(e) {
+      showToast('Gagal terhubung ke database', 'error');
+      hideLoading();
+    }
+  } else {
+    // Jika sudah konek anonymous, cek apakah ada sesi user manual di localStorage
+    await checkSession();
+  }
+});
+
+async function checkSession() {
+  const savedUid = localStorage.getItem('niatUmrohUid');
+  if (savedUid) {
+    try {
+      const snap = await getDoc(doc(db, 'userProfiles', savedUid));
       if (snap.exists()) {
         userProfile = snap.data();
+        currentUser = { uid: savedUid }; // Mock objek currentUser
         if (userProfile.role === 'admin') {
           showScreen('adminScreen');
           loadAdminDashboard();
@@ -877,42 +837,59 @@ onAuthStateChanged(auth, async (user) => {
           loadUserDashboard();
         }
       } else {
-        await signOut(auth);
-        showScreen('loginScreen');
-        showToast('Profil tidak ditemukan. Hubungi admin.', 'error');
+        window.handleLogout(); // Dokumen dihapus/hilang, paksa logout
       }
     } catch(e) {
-      showToast('Gagal memuat profil: ' + e.message, 'error');
+      showToast('Gagal memuat profil', 'error');
       showScreen('loginScreen');
     }
   } else {
-    currentUser = null;
-    userProfile = null;
     showScreen('loginScreen');
   }
   hideLoading();
-});
+}
 
 window.handleLogin = async function() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPassword').value;
-  const btn   = document.getElementById('loginBtn');
-  if (!email || !pass) { showToast('Isi email dan password', 'error'); return; }
+  const username = document.getElementById('loginUsername').value.trim();
+  const pass     = document.getElementById('loginPassword').value;
+  const btn      = document.getElementById('loginBtn');
+  
+  if (!username || !pass) { showToast('Isi username dan password', 'error'); return; }
+  
   btn.textContent = 'Memuat...';
   btn.disabled = true;
+  
   try {
-    await signInWithEmailAndPassword(auth, email, pass);
+    // Cari user berdasarkan username dan password secara langsung
+    const q = query(
+      collection(db, 'userProfiles'), 
+      where('username', '==', username), 
+      where('password', '==', pass)
+    );
+    
+    const snap = await getDocs(q);
+    
+    if (!snap.empty) {
+      const userDoc = snap.docs[0];
+      // Simpan ID dokumen ke localStorage sebagai sesi
+      localStorage.setItem('niatUmrohUid', userDoc.id);
+      await checkSession();
+    } else {
+      showToast('Username atau password salah', 'error');
+    }
   } catch(e) {
-    let msg = 'Email atau password salah';
-    if (e.code === 'auth/too-many-requests') msg = 'Terlalu banyak percobaan. Coba lagi nanti.';
-    showToast(msg, 'error');
-    btn.textContent = 'Masuk';
-    btn.disabled = false;
+    showToast('Gagal masuk: ' + e.message, 'error');
   }
+  
+  btn.textContent = 'Masuk';
+  btn.disabled = false;
 };
 
-window.handleLogout = async function() {
-  await signOut(auth);
+window.handleLogout = function() {
+  localStorage.removeItem('niatUmrohUid');
+  currentUser = null;
+  userProfile = null;
+  showScreen('loginScreen');
   showToast('Berhasil keluar');
 };
 
@@ -947,7 +924,7 @@ async function loadUserDashboard() {
     const estD = new Date(Date.now() + daysLeft * 86400000);
     document.getElementById('userEstDate').textContent =
       estD.toLocaleDateString('id-ID', {month:'short', year:'numeric'});
-  } else if (rem <= 0) {
+  } else if (rem <= 0 && target > 0) {
     document.getElementById('userEstDate').textContent = 'Siap! ✅';
   } else {
     document.getElementById('userEstDate').textContent = '—';
@@ -957,11 +934,7 @@ async function loadUserDashboard() {
   document.getElementById('userStatusWrap').innerHTML =
     `<div class="status-pill ${st.cls}">${st.label}</div>`;
 
-  // History
-  const q = query(
-    collection(db, 'savingsEntries', uid, 'logs'),
-    orderBy('date', 'desc'), limit(10)
-  );
+  const q = query(collection(db, 'savingsEntries', uid, 'logs'), orderBy('date', 'desc'), limit(10));
   const snap = await getDocs(q);
   const entries = [];
   snap.forEach(d => entries.push({ id:d.id, ...d.data() }));
@@ -1024,7 +997,6 @@ async function loadAdminDashboard() {
     if (d.data().role !== 'admin') usersCache.push({ uid:d.id, ...d.data() });
   });
 
-  // Stats
   let ready = 0, totalCollected = 0;
   usersCache.forEach(u => {
     const tgt   = (u.numPeople||1)*(u.costPerPerson||0);
@@ -1037,7 +1009,6 @@ async function loadAdminDashboard() {
   document.getElementById('adminReadyUsers').textContent     = ready;
   document.getElementById('adminTotalCollected').textContent = rpShort(totalCollected);
 
-  // Cards
   const container = document.getElementById('adminUserList');
   if (!usersCache.length) {
     container.innerHTML = `<div class="empty-state"><div class="es-icon">👥</div><p>Belum ada anggota.</p></div>`;
@@ -1084,16 +1055,16 @@ window.openAddUserModal = function() {
 };
 
 window.createUser = async function() {
-  const name   = document.getElementById('newName').value.trim();
-  const email  = document.getElementById('newEmail').value.trim();
-  const pass   = document.getElementById('newPass').value;
-  const people = parseInt(document.getElementById('newPeople').value) || 1;
-  const cost   = parseFloat(document.getElementById('newCost').value) || 0;
-  const daily  = parseFloat(document.getElementById('newDaily').value) || 0;
-  const startV = document.getElementById('newStart').value;
+  const name     = document.getElementById('newName').value.trim();
+  const username = document.getElementById('newUsername').value.trim().toLowerCase();
+  const pass     = document.getElementById('newPass').value;
+  const people   = parseInt(document.getElementById('newPeople').value) || 1;
+  const cost     = parseFloat(document.getElementById('newCost').value) || 0;
+  const daily    = parseFloat(document.getElementById('newDaily').value) || 0;
+  const startV   = document.getElementById('newStart').value;
 
-  if (!name || !email || !pass) {
-    showToast('Nama, email, dan password wajib diisi', 'error'); return;
+  if (!name || !username || !pass) {
+    showToast('Nama, username, dan password wajib diisi', 'error'); return;
   }
   if (pass.length < 6) { showToast('Password minimal 6 karakter', 'error'); return; }
 
@@ -1101,18 +1072,20 @@ window.createUser = async function() {
   btn.textContent = 'Membuat akun...'; btn.disabled = true;
 
   try {
-    // Create user via Firebase REST API (tanpa mengganti sesi admin)
-    const resp = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseConfig.apiKey}`,
-      { method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ email, password:pass, returnSecureToken:true }) }
-    );
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error.message);
+    // Cek apakah username sudah ada
+    const checkQ = query(collection(db, 'userProfiles'), where('username', '==', username));
+    const snapCheck = await getDocs(checkQ);
+    if (!snapCheck.empty) {
+      showToast('Username sudah dipakai, pilih yang lain', 'error');
+      btn.textContent = 'Buat Akun Anggota'; btn.disabled = false;
+      return;
+    }
 
-    await setDoc(doc(db, 'userProfiles', data.localId), {
+    // Tambah dokumen langsung tanpa create Auth User (karena kita pakai Anonymous)
+    await addDoc(collection(db, 'userProfiles'), {
       displayName:       name,
-      email:             email,
+      username:          username,
+      password:          pass, // Peringatan: Disimpan dalam plain text
       role:              'user',
       numPeople:         people,
       costPerPerson:     cost,
@@ -1123,19 +1096,14 @@ window.createUser = async function() {
       createdBy:         currentUser.uid
     });
 
-    // Reset form
-    ['newName','newEmail','newPass','newCost','newDaily'].forEach(id =>
-      document.getElementById(id).value = '');
+    ['newName','newUsername','newPass','newCost','newDaily'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('newPeople').value = '1';
 
     document.getElementById('addUserModal').classList.remove('open');
     showToast(`Akun ${name} berhasil dibuat! 🎉`, 'success');
     await loadAdminDashboard();
   } catch(e) {
-    let msg = 'Gagal membuat akun';
-    if (e.message === 'EMAIL_EXISTS') msg = 'Email sudah terdaftar';
-    if (e.message === 'INVALID_EMAIL') msg = 'Format email tidak valid';
-    showToast(msg, 'error');
+    showToast('Gagal membuat akun: ' + e.message, 'error');
   }
 
   btn.textContent = 'Buat Akun Anggota'; btn.disabled = false;
@@ -1148,8 +1116,8 @@ window.openUserDetail = async function(uid) {
   selectedDetail = usersCache.find(u => u.uid === uid);
   if (!selectedDetail) return;
 
-  const u     = selectedDetail;
-  const tgt   = (u.numPeople||1) * (u.costPerPerson||0);
+  const u   = selectedDetail;
+  const tgt = (u.numPeople||1) * (u.costPerPerson||0);
   const saved = u.totalSaved || 0;
   const pct   = pctOf(saved, tgt);
   const rem   = Math.max(0, tgt - saved);
@@ -1171,7 +1139,7 @@ window.openUserDetail = async function(uid) {
   document.getElementById('detailBar').style.width   = pct + '%';
 
   document.getElementById('detailRows').innerHTML = `
-    <div class="detail-row"><span class="dl">Email</span><span class="dv">${u.email}</span></div>
+    <div class="detail-row"><span class="dl">Username</span><span class="dv">${u.username}</span></div>
     <div class="detail-row"><span class="dl">Status</span>
       <span class="status-pill ${st.cls}" style="padding:3px 10px;font-size:11px;margin:0">${st.label}</span></div>
     <div class="detail-row"><span class="dl">Jumlah Orang</span><span class="dv">${u.numPeople||1} orang</span></div>
@@ -1186,11 +1154,7 @@ window.openUserDetail = async function(uid) {
     <div class="detail-row"><span class="dl">Estimasi Siap</span><span class="dv" style="font-size:12px">${estTxt}</span></div>
   `;
 
-  // History
-  const q = query(
-    collection(db, 'savingsEntries', uid, 'logs'),
-    orderBy('date', 'desc'), limit(15)
-  );
+  const q = query(collection(db, 'savingsEntries', uid, 'logs'), orderBy('date', 'desc'), limit(15));
   const snap = await getDocs(q);
   const entries = [];
   snap.forEach(d => entries.push({ id:d.id, ...d.data() }));
@@ -1199,33 +1163,19 @@ window.openUserDetail = async function(uid) {
   document.getElementById('userDetailModal').classList.add('open');
 };
 
-window.sendResetEmail = async function() {
-  if (!selectedDetail?.email) return;
-  try {
-    await sendPasswordResetEmail(auth, selectedDetail.email);
-    showToast(`Email reset terkirim ke ${selectedDetail.email}`, 'success');
-  } catch(e) {
-    showToast('Gagal mengirim email reset: ' + e.message, 'error');
-  }
-};
-
-// ═══════════════════════════════════════════
-//  MODAL HELPERS
-// ═══════════════════════════════════════════
+// MODAL HELPERS
 window.closeOnBg = function(e, id) {
   if (e.target === document.getElementById(id))
     document.getElementById(id).classList.remove('open');
 };
 
-// Keyboard listeners
 document.getElementById('loginPassword').addEventListener('keypress', e => {
   if (e.key === 'Enter') handleLogin();
 });
-document.getElementById('loginEmail').addEventListener('keypress', e => {
+document.getElementById('loginUsername').addEventListener('keypress', e => {
   if (e.key === 'Enter') document.getElementById('loginPassword').focus();
 });
 
-// Swipe-down to close modals
 ['addUserModal','userDetailModal'].forEach(id => {
   const modal = document.querySelector(`#${id} .modal`);
   let startY = 0;
