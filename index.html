@@ -143,13 +143,6 @@
       
       <div>
         <div class="card">
-          <div class="card-header">Grafik Pertumbuhan Tabungan</div>
-          <div class="chart-box">
-            <canvas id="mainChart"></canvas>
-          </div>
-        </div>
-
-        <div class="card">
           <div class="card-header" style="margin-bottom: 12px;">Analisis & Simulasi Tabungan</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div class="kpi-box" style="margin: 0; padding: 12px;">
@@ -164,7 +157,7 @@
           
           <div class="simulation-panel">
             <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main);">Simulasi Tabungan Tetap</h4>
-            <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 10px;">Jika saya konsisten menabung sebesar:</p>
+            <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 10px;">Kalkulasi visual bila konsisten menabung sebesar:</p>
             <div style="display: flex; gap: 12px;">
               <div style="flex: 2;">
                 <input type="number" id="simAmount" placeholder="Nominal (Rp)" oninput="runSimulation()">
@@ -176,8 +169,13 @@
                 </select>
               </div>
             </div>
+            
             <div class="simulation-result" id="simResult">
               Ketikkan angka di atas untuk melihat kapan tabungan Anda akan lunas.
+            </div>
+
+            <div class="chart-box" style="margin-top: 24px; display: none;" id="simChartWrapper">
+              <canvas id="simChart"></canvas>
             </div>
           </div>
         </div>
@@ -290,7 +288,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let currentUser = null, userProfile = null, globalEntries = [], chartInst = null;
+let currentUser = null, userProfile = null, globalEntries = [], simChartInst = null;
 let showingAllHistory = false;
 
 // Format Rupiah Indonesia (menggunakan pemisah titik)
@@ -359,7 +357,6 @@ async function loadUser() {
   window.runSimulation();
 }
 
-// Render data untuk History (dengan fitur Expandable dan Hapus) dan Grafik Batang
 function renderData(target, saved, rem) {
   const listEl = document.getElementById('historyListContainer');
   if (!globalEntries.length) {
@@ -413,57 +410,6 @@ function renderData(target, saved, rem) {
       document.getElementById('uiEstDate').textContent = `Lunas pada: ${fmtDt(estD)}`;
     } else document.getElementById('uiEstDate').textContent = 'Ayo mulai menabung!';
   }
-
-  // --- GRAFIK BATANG ---
-  const ctx = document.getElementById('mainChart').getContext('2d');
-  if (chartInst) chartInst.destroy();
-  
-  let acc = 0; const lbls = [], pts = [];
-  globalEntries.forEach(e => { acc += e.amount; lbls.push(fmtDt(e.date)); pts.push(acc); });
-  if (!pts.length) { lbls.push(fmtDt(new Date())); pts.push(0); }
-  
-  chartInst = new Chart(ctx, {
-    type: 'bar', // Menggunakan diagram batang
-    data: { 
-      labels: lbls, 
-      datasets: [
-        { 
-          label: 'Total Tabungan Terkumpul', 
-          data: pts, 
-          backgroundColor: 'rgba(37, 99, 235, 0.85)',
-          borderRadius: 4,
-          barPercentage: 0.7
-        }, 
-        { 
-          type: 'line', // Garis putus-putus untuk target
-          label: 'Target Tabungan', 
-          data: Array(lbls.length).fill(target), 
-          borderColor: '#94a3b8', 
-          borderDash: [5,5], 
-          pointRadius: 0,
-          borderWidth: 2,
-          fill: false
-        }
-      ] 
-    },
-    options: { 
-      responsive: true, 
-      maintainAspectRatio: false, 
-      interaction: { mode: 'index', intersect: false },
-      plugins: { 
-        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
-        tooltip: { callbacks: { label: (ctx) => 'Rp ' + ctx.parsed.y.toLocaleString('id-ID') } }
-      }, 
-      scales: { 
-        y: { 
-          beginAtZero: true, 
-          grid: { color: '#e2e8f0', drawBorder: false },
-          ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') } 
-        },
-        x: { grid: { display: false } }
-      } 
-    }
-  });
 }
 
 // Logika Buka/Tutup Riwayat
@@ -496,12 +442,23 @@ window.runSimulation = () => {
   const amt = parseFloat(document.getElementById('simAmount').value);
   const period = document.getElementById('simPeriod').value;
   const resEl = document.getElementById('simResult');
+  const chartWrapper = document.getElementById('simChartWrapper');
   const tgt = (userProfile.numPeople || 1) * (userProfile.costPerPerson || 0);
   const saved = userProfile.totalSaved || 0;
   const rem = Math.max(0, tgt - saved);
 
-  if (rem <= 0) { resEl.innerHTML = "Selamat! Tabungan Anda sudah lunas."; return; }
-  if (!amt || amt <= 0) { resEl.innerHTML = "Ketikkan angka nominal di atas untuk melihat perhitungan."; return; }
+  if (rem <= 0) { 
+    resEl.innerHTML = "Selamat! Tabungan Anda sudah lunas."; 
+    chartWrapper.style.display = 'none';
+    return; 
+  }
+  if (!amt || amt <= 0) { 
+    resEl.innerHTML = "Ketikkan angka nominal di atas untuk melihat proyeksi tabungan."; 
+    chartWrapper.style.display = 'none';
+    return; 
+  }
+
+  chartWrapper.style.display = 'block';
 
   const dailyInput = period === 'monthly' ? amt / 30 : amt;
   const daysLeft = Math.ceil(rem / dailyInput);
@@ -509,8 +466,89 @@ window.runSimulation = () => {
   
   let timeStr = period === 'monthly' ? `${(daysLeft/30).toFixed(1)} bulan` : `${daysLeft} hari`;
   
-  resEl.innerHTML = `Jika Anda rutin menyetor <b>${fmtRp(amt)}</b> per ${period === 'monthly' ? 'bulan' : 'hari'}, kekurangan tabungan akan lunas dalam <b>${timeStr}</b>. <br><br>Target lunas: <b>${fmtDt(estDate)}</b>.`;
+  resEl.innerHTML = `Jika Anda rutin menyetor <b>${fmtRp(amt)}</b> per ${period === 'monthly' ? 'bulan' : 'hari'}, sisa target akan terpenuhi dalam <b>${timeStr}</b>. <br><br>Estimasi Lunas: <b>${fmtDt(estDate)}</b>.`;
+
+  // --- RENDERING GRAFIK SIMULASI ---
+  let simLabels = [];
+  let simData = [];
+  let currentDate = new Date();
+
+  // Batasi jumlah titik di grafik agar tidak terlalu rapat (maksimal ~10 titik)
+  let step = Math.ceil(daysLeft / 10);
+  if(step < 1) step = 1;
+
+  for(let i=0; i<=daysLeft; i+=step) {
+     let d = new Date(currentDate.getTime() + i * 86400000);
+     simLabels.push(fmtDt(d));
+     let projected = saved + (i * dailyInput);
+     simData.push(projected > tgt ? tgt : projected);
+  }
+  
+  // Pastikan titik terakhir menyentuh target pas di tanggal estimasi
+  if(simData[simData.length-1] < tgt) {
+     simLabels.push(fmtDt(estDate));
+     simData.push(tgt);
+  }
+
+  renderSimChart(simLabels, simData, tgt);
 };
+
+function renderSimChart(labels, data, target) {
+  const ctx = document.getElementById('simChart').getContext('2d');
+  if (simChartInst) simChartInst.destroy();
+  if (labels.length === 0) return;
+
+  // Efek Gradien Biru
+  let gradient = ctx.createLinearGradient(0, 0, 0, 320);
+  gradient.addColorStop(0, 'rgba(37, 99, 235, 0.4)');
+  gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
+  simChartInst = new Chart(ctx, {
+    type: 'line', 
+    data: { 
+      labels: labels, 
+      datasets: [
+        { 
+          label: 'Proyeksi Tabungan', 
+          data: data, 
+          borderColor: '#2563eb', 
+          backgroundColor: gradient,
+          fill: true,
+          tension: 0.1,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+          borderWidth: 2
+        }, 
+        { 
+          label: 'Target Lunas', 
+          data: Array(labels.length).fill(target), 
+          borderColor: '#94a3b8', 
+          borderDash: [5,5], 
+          pointRadius: 0,
+          borderWidth: 2,
+          fill: false
+        }
+      ] 
+    },
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false, 
+      interaction: { mode: 'index', intersect: false },
+      plugins: { 
+        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
+        tooltip: { callbacks: { label: (ctx) => 'Rp ' + ctx.parsed.y.toLocaleString('id-ID') } }
+      }, 
+      scales: { 
+        y: { 
+          beginAtZero: false, 
+          grid: { color: '#e2e8f0', drawBorder: false },
+          ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') } 
+        },
+        x: { grid: { display: false } }
+      } 
+    }
+  });
+}
 
 window.submitDailySavings = async () => {
   const dateVal = document.getElementById('inputDate').value;
