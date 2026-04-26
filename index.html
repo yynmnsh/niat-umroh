@@ -3,730 +3,337 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>NiatUmroh — Kalkulator Tabungan Umroh</title>
+  <title>Sistem Tabungan Umroh Terpadu</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --teal:       #1B4D4A;
-      --teal-mid:   #245e5b;
-      --teal-light: #3d8a85;
-      --teal-pale:  #e6f4f3;
-      --gold:       #C9A84C;
-      --gold-light: #dfc068;
-      --gold-pale:  #fdf4e0;
-      --cream:      #FDF6EC;
-      --warm-white: #FFFCF7;
-      --text-dark:  #1a2e2d;
-      --text-mid:   #4a6462;
-      --text-soft:  #8aaba8;
-      --border:     rgba(27,77,74,0.1);
-      --shadow-sm:  0 2px 12px rgba(27,77,74,0.06);
-      --shadow-md:  0 6px 24px rgba(27,77,74,0.10);
-      --shadow-lg:  0 16px 48px rgba(27,77,74,0.14);
-      --success:    #2d8a6e;
-      --warning:    #c4893a;
-      --danger:     #c44a3a;
-      --r:    12px;
-      --r-lg: 20px;
+      --primary:      #0f172a;
+      --primary-light:#1e293b;
+      --accent:       #0284c7;
+      --accent-light: #e0f2fe;
+      --bg-color:     #f8fafc;
+      --surface:      #ffffff;
+      --text-main:    #0f172a;
+      --text-muted:   #64748b;
+      --border:       #e2e8f0;
+      --success:      #10b981;
+      --warning:      #f59e0b;
+      --danger:       #ef4444;
+      --radius-md:    8px;
+      --radius-lg:    12px;
+      --shadow-sm:    0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md:    0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-    html { scroll-behavior:smooth; }
     body {
-      font-family:'Plus Jakarta Sans',sans-serif;
-      background:var(--cream);
-      color:var(--text-dark);
-      min-height:100vh;
-      -webkit-font-smoothing:antialiased;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── LOADING ── */
-    #loadingOverlay {
-      position:fixed;inset:0;background:var(--teal);
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      z-index:1000;transition:opacity .4s;
+    /* ── COMPONENTS ── */
+    .screen { display: none; min-height: 100vh; }
+    .screen.active { display: block; }
+    
+    .btn {
+      padding: 10px 16px; border-radius: var(--radius-md); font-weight: 500;
+      font-size: 14px; cursor: pointer; transition: all 0.2s; border: none; font-family: inherit;
     }
-    #loadingOverlay .load-moon { font-size:48px;margin-bottom:16px;animation:pulse 1.4s ease-in-out infinite; }
-    #loadingOverlay p { color:rgba(255,255,255,.65);font-size:14px; }
-    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.1);opacity:.8} }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-light); }
+    .btn-accent { background: var(--accent); color: white; }
+    .btn-accent:hover { opacity: 0.9; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+    .btn-outline:hover { background: var(--bg-color); }
+    
+    .card {
+      background: var(--surface); border-radius: var(--radius-lg); padding: 24px;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--border); margin-bottom: 20px;
+    }
+    .card-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 12px; }
 
-    .spinner {
-      width:36px;height:36px;border:3px solid rgba(255,255,255,.2);
-      border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin-top:20px;
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+    .form-control {
+      width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: var(--radius-md); font-size: 14px; font-family: inherit; outline: none;
     }
-    @keyframes spin { to{transform:rotate(360deg)} }
+    .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+
+    /* ── NAVIGATION ── */
+    .navbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 64px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .nav-brand { font-size: 18px; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
+    .nav-user { font-size: 14px; color: var(--text-muted); display: flex; align-items: center; gap: 16px; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+
+    /* ── DASHBOARD GRIDS ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card { background: var(--surface); border: 1px solid var(--border); padding: 20px; border-radius: var(--radius-lg); }
+    .kpi-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .kpi-value { font-size: 24px; font-weight: 700; color: var(--primary); }
+    .kpi-value.highlight { color: var(--accent); }
+
+    /* ── CHART & LIST ── */
+    .chart-container { position: relative; height: 300px; width: 100%; }
+    
+    .list-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .list-item:last-child { border-bottom: none; }
+    .item-meta { font-size: 13px; color: var(--text-muted); }
+    .item-title { font-size: 14px; font-weight: 500; color: var(--primary); }
+    .item-value { font-size: 14px; font-weight: 600; }
+
+    /* ── MODALS ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 200;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-content {
+      background: var(--surface); width: 100%; max-width: 500px; border-radius: var(--radius-lg);
+      padding: 24px; box-shadow: var(--shadow-md); transform: translateY(20px); transition: transform 0.2s;
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-overlay.open .modal-content { transform: translateY(0); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-header h3 { font-size: 18px; font-weight: 600; }
+    .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+
+    /* ── LOGIN ── */
+    .login-wrapper {
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg-color), #e2e8f0);
+    }
+    .login-box {
+      background: var(--surface); padding: 40px; border-radius: var(--radius-lg);
+      width: 100%; max-width: 400px; box-shadow: var(--shadow-md); border: 1px solid var(--border);
+    }
+    .login-header { text-align: center; margin-bottom: 32px; }
+    .login-header h1 { font-size: 24px; font-weight: 700; color: var(--primary); letter-spacing: -0.5px; }
 
     /* ── TOAST ── */
     #toast {
-      position:fixed;bottom:24px;left:50%;
-      transform:translateX(-50%) translateY(120px);
-      background:var(--text-dark);color:white;
-      padding:12px 22px;border-radius:999px;font-size:14px;font-weight:500;
-      z-index:500;transition:transform .35s cubic-bezier(.34,1.56,.64,1);
-      white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.25);
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px);
+      background: var(--primary); color: white; padding: 12px 24px; border-radius: var(--radius-md);
+      font-size: 14px; z-index: 500; transition: transform 0.3s ease; box-shadow: var(--shadow-md);
     }
-    #toast.success { background:var(--success); }
-    #toast.error   { background:var(--danger); }
-    #toast.show    { transform:translateX(-50%) translateY(0); }
-
-    /* ── SCREENS ── */
-    .screen { display:none;min-height:100vh; }
-    .screen.active { display:block; }
-
-    /* ═══════════════════════════════════════
-       LOGIN
-    ═══════════════════════════════════════ */
-    #loginScreen {
-      display:flex;align-items:center;justify-content:center;padding:24px;
-      background:linear-gradient(145deg,#1B4D4A 0%,#0d2b29 55%,#1a3a38 100%);
-      position:relative;overflow:hidden;min-height:100vh;
-    }
-    .login-deco {
-      position:absolute;border-radius:50%;border:1px solid rgba(201,168,76,.15);
-      pointer-events:none;
-    }
-    .ld1 { width:500px;height:500px;top:-200px;right:-160px; }
-    .ld2 { width:300px;height:300px;bottom:-100px;left:-80px; }
-    .ld3 { width:160px;height:160px;bottom:80px;right:50px; }
-    .ld4 { width:220px;height:220px;top:60px;left:-60px;border-color:rgba(201,168,76,.08); }
-
-    .login-card {
-      background:var(--warm-white);border-radius:28px;
-      padding:48px 40px;width:100%;max-width:420px;
-      box-shadow:0 32px 80px rgba(0,0,0,.35);position:relative;z-index:2;
-    }
-    .login-logo { text-align:center;margin-bottom:36px; }
-    .login-logo .moon-box {
-      width:68px;height:68px;background:linear-gradient(135deg,var(--gold),var(--gold-light));
-      border-radius:22px;display:flex;align-items:center;justify-content:center;
-      font-size:34px;margin:0 auto 16px;
-      box-shadow:0 8px 24px rgba(201,168,76,.4);
-    }
-    .login-logo h1 {
-      font-family:'Playfair Display',serif;font-size:30px;
-      color:var(--teal);font-weight:700;letter-spacing:-.3px;
-    }
-    .login-logo p { font-size:13px;color:var(--text-soft);margin-top:5px; }
-
-    /* ── FORM ── */
-    .form-group { margin-bottom:18px; }
-    .form-group label {
-      display:block;font-size:12px;font-weight:700;
-      color:var(--text-mid);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;
-    }
-    .form-group input, .form-group select {
-      width:100%;padding:13px 16px;
-      border:1.5px solid var(--border);border-radius:var(--r);
-      font-family:inherit;font-size:15px;color:var(--text-dark);
-      background:var(--cream);transition:all .2s;outline:none;
-    }
-    .form-group input:focus, .form-group select:focus {
-      border-color:var(--teal);background:white;
-      box-shadow:0 0 0 3px rgba(27,77,74,.08);
-    }
-    .form-group input::placeholder { color:var(--text-soft); }
-
-    .btn-primary {
-      width:100%;padding:15px;
-      background:linear-gradient(135deg,var(--teal),var(--teal-mid));
-      color:white;border:none;border-radius:var(--r);
-      font-family:inherit;font-size:15px;font-weight:700;
-      cursor:pointer;transition:all .2s;letter-spacing:.2px;margin-top:6px;
-    }
-    .btn-primary:hover { transform:translateY(-1px);box-shadow:0 8px 24px rgba(27,77,74,.3); }
-    .btn-primary:active { transform:translateY(0); }
-    .btn-primary:disabled { opacity:.65;cursor:not-allowed;transform:none; }
-
-    /* ═══════════════════════════════════════
-       SHARED NAV
-    ═══════════════════════════════════════ */
-    .top-nav {
-      background:var(--teal);padding:0 20px;height:62px;
-      display:flex;align-items:center;justify-content:space-between;
-      position:sticky;top:0;z-index:100;
-      box-shadow:0 2px 16px rgba(0,0,0,.18);
-    }
-    .nav-brand { display:flex;align-items:center;gap:10px; }
-    .nav-brand .brand-icon {
-      width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-light));
-      border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;
-    }
-    .nav-brand h2 {
-      font-family:'Playfair Display',serif;color:white;
-      font-size:18px;font-weight:700;letter-spacing:-.2px;
-    }
-    .nav-right { display:flex;align-items:center;gap:10px; }
-    .nav-user-name { font-size:13px;color:rgba(255,255,255,.7); }
-    .nav-user-name strong { color:var(--gold-light); }
-    .btn-logout {
-      padding:8px 14px;background:rgba(255,255,255,.1);
-      border:1px solid rgba(255,255,255,.15);border-radius:8px;
-      color:white;font-family:inherit;font-size:13px;font-weight:500;
-      cursor:pointer;transition:all .2s;
-    }
-    .btn-logout:hover { background:rgba(255,255,255,.2); }
-
-    .badge {
-      display:inline-block;padding:4px 10px;border-radius:999px;
-      font-size:11px;font-weight:700;letter-spacing:.3px;
-    }
-    .badge.admin { background:var(--gold-pale);color:#a06a10; }
-    .badge.user  { background:var(--teal-pale);color:var(--teal); }
-
-    /* ── MAIN WRAP ── */
-    .main-content { padding:20px;max-width:760px;margin:0 auto; }
-
-    /* ═══════════════════════════════════════
-       HERO CARD (User)
-    ═══════════════════════════════════════ */
-    .hero-card {
-      background:linear-gradient(145deg,var(--teal) 0%,#0e2f2d 100%);
-      border-radius:var(--r-lg);padding:28px 24px;color:white;
-      margin-bottom:16px;position:relative;overflow:hidden;
-    }
-    .hero-card::before {
-      content:'';position:absolute;top:-50px;right:-50px;
-      width:180px;height:180px;border:2px solid rgba(201,168,76,.18);border-radius:50%;
-    }
-    .hero-card::after {
-      content:'';position:absolute;top:-25px;right:-25px;
-      width:110px;height:110px;border:2px solid rgba(201,168,76,.1);border-radius:50%;
-    }
-    .hero-greeting { font-size:13px;color:rgba(255,255,255,.6);margin-bottom:3px; }
-    .hero-name { font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:18px; }
-
-    .progress-wrap { margin-bottom:18px; }
-    .progress-label {
-      display:flex;justify-content:space-between;
-      font-size:12px;color:rgba(255,255,255,.6);margin-bottom:8px;
-    }
-    .progress-label strong { color:white;font-size:14px; }
-    .progress-track {
-      width:100%;height:10px;background:rgba(255,255,255,.12);
-      border-radius:999px;overflow:hidden;
-    }
-    .progress-fill {
-      height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-light));
-      border-radius:999px;transition:width 1.2s cubic-bezier(.22,1,.36,1);
-    }
-
-    .hero-amounts {
-      display:grid;grid-template-columns:repeat(3,1fr);gap:10px;
-    }
-    .ha-item {
-      background:rgba(255,255,255,.07);border-radius:12px;padding:12px;
-      border:1px solid rgba(255,255,255,.08);
-    }
-    .ha-label { font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px; }
-    .ha-value { font-size:14px;font-weight:700;color:white;word-break:break-all; }
-    .ha-value.gold { color:var(--gold-light); }
-
-    /* ── STATUS BADGE ── */
-    .status-pill {
-      display:inline-flex;align-items:center;gap:6px;
-      padding:6px 14px;border-radius:999px;font-size:12px;font-weight:700;
-      margin-bottom:16px;
-    }
-    .status-pill.ready  { background:rgba(45,138,110,.18);color:#5dcfab;border:1px solid rgba(45,138,110,.3); }
-    .status-pill.soon   { background:rgba(201,168,76,.18);color:var(--gold-light);border:1px solid rgba(201,168,76,.3); }
-    .status-pill.saving { background:rgba(255,255,255,.1);color:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.15); }
-
-    /* ═══════════════════════════════════════
-       STAT CARDS
-    ═══════════════════════════════════════ */
-    .stats-grid {
-      display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;
-    }
-    .stat-card {
-      background:white;border-radius:var(--r);padding:18px;
-      box-shadow:var(--shadow-sm);border:1px solid var(--border);
-    }
-    .stat-icon {
-      width:38px;height:38px;border-radius:11px;
-      display:flex;align-items:center;justify-content:center;
-      font-size:18px;margin-bottom:10px;
-    }
-    .si-teal { background:var(--teal-pale); }
-    .si-gold { background:var(--gold-pale); }
-    .stat-value { font-size:18px;font-weight:800;color:var(--text-dark);margin-bottom:3px;line-height:1.1; }
-    .stat-label { font-size:11px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.4px; }
-
-    /* ═══════════════════════════════════════
-       CARD
-    ═══════════════════════════════════════ */
-    .card {
-      background:white;border-radius:var(--r-lg);padding:22px;
-      box-shadow:var(--shadow-sm);border:1px solid var(--border);margin-bottom:16px;
-    }
-    .card-header { display:flex;align-items:center;justify-content:space-between;margin-bottom:18px; }
-    .card-title { font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--text-dark); }
-    .card-sub { font-size:12px;color:var(--text-soft);margin-top:2px; }
-
-    /* ── SAVINGS INPUT ── */
-    .savings-row { display:flex;gap:10px;align-items:flex-start;margin-bottom:10px; }
-    .savings-row .form-group { flex:1;margin:0; }
-    .currency-wrap { position:relative; }
-    .currency-prefix {
-      position:absolute;left:14px;top:50%;transform:translateY(-50%);
-      font-size:13px;font-weight:700;color:var(--text-soft);pointer-events:none;
-    }
-    .currency-wrap input { padding-left:46px !important; }
-
-    .btn-add {
-      padding:13px 20px;
-      background:linear-gradient(135deg,var(--teal),var(--teal-mid));
-      color:white;border:none;border-radius:var(--r);
-      font-family:inherit;font-size:14px;font-weight:700;
-      cursor:pointer;white-space:nowrap;transition:all .2s;margin-top:26px;
-    }
-    .btn-add:hover { box-shadow:0 6px 16px rgba(27,77,74,.3);transform:translateY(-1px); }
-    .btn-add:active { transform:translateY(0); }
-
-    /* ── HISTORY LIST ── */
-    .history-list { display:flex;flex-direction:column;gap:8px; }
-    .history-item {
-      display:flex;align-items:center;justify-content:space-between;
-      padding:12px 14px;background:var(--cream);border-radius:10px;border:1px solid var(--border);
-    }
-    .hi-left { display:flex;align-items:center;gap:11px; }
-    .hi-dot { width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0; }
-    .hi-date { font-size:13px;color:var(--text-mid);font-weight:500; }
-    .hi-note { font-size:11px;color:var(--text-soft);margin-top:1px; }
-    .hi-amount { font-size:14px;font-weight:800;color:var(--teal); }
-
-    /* ═══════════════════════════════════════
-       ADMIN DASHBOARD
-    ═══════════════════════════════════════ */
-    .admin-hero {
-      background:linear-gradient(135deg,var(--teal),#0e2f2d);
-      border-radius:var(--r-lg);padding:24px;color:white;margin-bottom:20px;
-    }
-    .admin-hero h2 {
-      font-family:'Playfair Display',serif;font-size:24px;font-weight:700;margin-bottom:4px;
-    }
-    .admin-hero p { font-size:13px;color:rgba(255,255,255,.6); }
-
-    .admin-stats-row {
-      display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;
-    }
-    .admin-stat {
-      background:white;border-radius:var(--r);padding:18px 14px;text-align:center;
-      box-shadow:var(--shadow-sm);border:1px solid var(--border);
-    }
-    .admin-stat-icon { font-size:24px;margin-bottom:8px; }
-    .admin-stat-value {
-      font-family:'Playfair Display',serif;font-size:26px;font-weight:700;
-      color:var(--teal);line-height:1;
-    }
-    .admin-stat-label { font-size:10px;color:var(--text-soft);margin-top:4px;text-transform:uppercase;letter-spacing:.4px; }
-
-    .section-header {
-      display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;
-    }
-    .section-title { font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text-dark); }
-
-    .btn-add-user {
-      display:flex;align-items:center;gap:7px;padding:11px 18px;
-      background:linear-gradient(135deg,var(--gold),var(--gold-light));
-      color:var(--text-dark);border:none;border-radius:var(--r);
-      font-family:inherit;font-size:13px;font-weight:700;
-      cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(201,168,76,.3);
-    }
-    .btn-add-user:hover { transform:translateY(-1px);box-shadow:0 8px 20px rgba(201,168,76,.4); }
-
-    /* ── USER CARD (admin list) ── */
-    .user-cards { display:flex;flex-direction:column;gap:12px; }
-    .user-card {
-      background:white;border-radius:var(--r);padding:18px 20px;
-      box-shadow:var(--shadow-sm);border:1px solid var(--border);transition:box-shadow .2s;
-    }
-    .user-card:hover { box-shadow:var(--shadow-md); }
-    .uc-top { display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px; }
-    .uc-name { font-size:15px;font-weight:800;color:var(--text-dark); }
-    .uc-meta { font-size:12px;color:var(--text-soft);margin-top:2px; }
-    .btn-detail {
-      padding:7px 14px;background:var(--teal-pale);color:var(--teal);
-      border:1px solid rgba(27,77,74,.15);border-radius:8px;
-      font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;
-      white-space:nowrap;flex-shrink:0;
-    }
-    .btn-detail:hover { background:var(--teal);color:white; }
-
-    .uc-progress { margin-bottom:10px; }
-    .uc-prog-top {
-      display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;
-    }
-    .uc-prog-pct { font-size:13px;font-weight:800;color:var(--text-dark); }
-    .mini-track { height:6px;background:var(--teal-pale);border-radius:999px;overflow:hidden; }
-    .mini-fill { height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-light));border-radius:999px; }
-
-    .uc-stats { display:flex;gap:16px;flex-wrap:wrap; }
-    .uc-stat { font-size:12px;color:var(--text-soft); }
-    .uc-stat strong { color:var(--text-dark);font-weight:700; }
-
-    /* ═══════════════════════════════════════
-       MODAL (bottom sheet)
-    ═══════════════════════════════════════ */
-    .modal-overlay {
-      position:fixed;inset:0;background:rgba(8,22,22,.65);
-      backdrop-filter:blur(6px);z-index:200;
-      display:flex;align-items:flex-end;justify-content:center;
-      opacity:0;pointer-events:none;transition:opacity .3s;
-    }
-    .modal-overlay.open { opacity:1;pointer-events:all; }
-    .modal {
-      background:white;border-radius:26px 26px 0 0;
-      width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
-      padding:28px 22px 40px;
-      transform:translateY(100%);
-      transition:transform .35s cubic-bezier(.34,1.2,.64,1);
-    }
-    .modal-overlay.open .modal { transform:translateY(0); }
-    .modal-handle {
-      width:44px;height:4px;background:var(--border);
-      border-radius:999px;margin:0 auto 22px;
-    }
-    .modal-title {
-      font-family:'Playfair Display',serif;font-size:22px;font-weight:700;
-      color:var(--text-dark);margin-bottom:22px;
-    }
-    .form-row { display:grid;grid-template-columns:1fr 1fr;gap:14px; }
-
-    /* ── DETAIL ROWS ── */
-    .detail-row {
-      display:flex;justify-content:space-between;align-items:center;
-      padding:11px 0;border-bottom:1px solid var(--border);font-size:14px;
-    }
-    .detail-row:last-child { border-bottom:none; }
-    .dl { color:var(--text-soft); }
-    .dv { font-weight:700;color:var(--text-dark);text-align:right; }
-    .dv.green { color:var(--success); }
-    .dv.orange { color:var(--warning); }
-
-    /* ── SECONDARY BUTTONS ── */
-    .btn-ghost {
-      padding:10px 18px;background:transparent;border:1.5px solid var(--border);
-      border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:700;
-      color:var(--text-mid);cursor:pointer;transition:all .2s;
-    }
-    .btn-ghost:hover { border-color:var(--teal);color:var(--teal); }
-
-    .btn-danger {
-      padding:10px 18px;background:transparent;border:1.5px solid rgba(196,74,58,.3);
-      border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:700;
-      color:var(--danger);cursor:pointer;transition:all .2s;
-    }
-    .btn-danger:hover { background:rgba(196,74,58,.07); }
-
-    /* ── EMPTY STATE ── */
-    .empty-state { text-align:center;padding:40px 20px;color:var(--text-soft); }
-    .empty-state .es-icon { font-size:40px;margin-bottom:12px; }
-    .empty-state p { font-size:14px; }
-
-    /* ── DIVIDER ── */
-    .divider {
-      border:none;border-top:1px solid var(--border);
-      margin:20px 0;
-    }
-
-    /* ── RESPONSIVE ── */
-    @media(max-width:480px) {
-      .hero-amounts { grid-template-columns:1fr 1fr; }
-      .hero-amounts .ha-item:last-child { grid-column:span 2; }
-      .form-row { grid-template-columns:1fr; }
-      .login-card { padding:36px 22px; }
-      .admin-stats-row { grid-template-columns:repeat(3,1fr); }
-      .admin-stat-value { font-size:20px; }
-      .uc-stats { gap:10px; }
-    }
-    @media(max-width:360px) {
-      .admin-stats-row { grid-template-columns:1fr; }
-      .stats-grid { grid-template-columns:1fr; }
-    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--danger); }
+    #toast.success { background: var(--success); }
   </style>
 </head>
 <body>
 
-<div id="loadingOverlay">
-  <div class="load-moon">🌙</div>
-  <p>Memuat NiatUmroh...</p>
-  <div class="spinner"></div>
-</div>
-
 <div id="toast"></div>
 
-<div id="loginScreen" class="screen" style="display:flex;">
-  <div class="login-deco ld1"></div>
-  <div class="login-deco ld2"></div>
-  <div class="login-deco ld3"></div>
-  <div class="login-deco ld4"></div>
-
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="moon-box">🕌</div>
-      <h1>NiatUmroh</h1>
-      <p>Kalkulator Tabungan Umroh Digital</p>
+<div id="loginScreen" class="screen active">
+  <div class="login-wrapper">
+    <div class="login-box">
+      <div class="login-header">
+        <h1>Sistem Tabungan Umroh</h1>
+        <p style="font-size: 14px; color: var(--text-muted); margin-top: 8px;">Silakan masuk ke akun Anda</p>
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="loginUsername" class="form-control" placeholder="chrisjohn" autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label>Kata Sandi</label>
+        <input type="password" id="loginPassword" class="form-control" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" id="loginBtn" onclick="handleLogin()">Masuk Akses</button>
     </div>
-
-    <div class="form-group">
-      <label>Username</label>
-      <input type="text" id="loginUsername" placeholder="ahmadfauzi" autocomplete="off">
-    </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
-    </div>
-    <button class="btn-primary" id="loginBtn" onclick="handleLogin()">Masuk</button>
-    <p style="text-align:center;font-size:12px;color:var(--text-soft);margin-top:18px;">
-      Hubungi admin untuk mendapatkan akun login
-    </p>
   </div>
 </div>
 
 <div id="userScreen" class="screen">
-  <nav class="top-nav">
-    <div class="nav-brand">
-      <div class="brand-icon">🕌</div>
-      <h2>NiatUmroh</h2>
-    </div>
-    <div class="nav-right">
-      <div class="nav-user-name">Halo, <strong id="userNavName">—</strong></div>
-      <button class="btn-logout" onclick="handleLogout()">Keluar</button>
+  <nav class="navbar">
+    <div class="nav-brand">Portal Umroh</div>
+    <div class="nav-user">
+      <span id="userNavName">Pengguna</span>
+      <button class="btn btn-outline" onclick="handleLogout()">Keluar</button>
     </div>
   </nav>
 
-  <div class="main-content">
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <h2 style="font-size: 22px; font-weight: 600;">Ringkasan Tabungan</h2>
+      <button class="btn btn-outline" onclick="openUserSettings()">Sesuaikan Target</button>
+    </div>
 
-    <div class="hero-card">
-      <div class="hero-greeting">Assalamu'alaikum 👋</div>
-      <div class="hero-name" id="userHeroName">—</div>
-      <div id="userStatusWrap"></div>
-
-      <div class="progress-wrap">
-        <div class="progress-label">
-          <span>Progress Tabungan</span>
-          <strong id="userProgressPct">0%</strong>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="userProgressBar" style="width:0%"></div>
-        </div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Terkumpul</div>
+        <div class="kpi-value highlight" id="userTotalSaved">Rp 0</div>
+        <div class="item-meta" id="userProgressPct" style="margin-top: 8px;">0% dari target</div>
       </div>
-
-      <div class="hero-amounts">
-        <div class="ha-item">
-          <div class="ha-label">Terkumpul</div>
-          <div class="ha-value gold" id="userTotalSaved">Rp 0</div>
-        </div>
-        <div class="ha-item">
-          <div class="ha-label">Target Total</div>
-          <div class="ha-value" id="userTotalTarget">Rp 0</div>
-        </div>
-        <div class="ha-item">
-          <div class="ha-label">Sisa Kebutuhan</div>
-          <div class="ha-value" id="userRemaining">Rp 0</div>
-        </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Target Keseluruhan</div>
+        <div class="kpi-value" id="userTotalTarget">Rp 0</div>
+        <div class="item-meta" id="userNumPeople" style="margin-top: 8px;">Untuk 1 Orang</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Sisa Kebutuhan</div>
+        <div class="kpi-value" id="userRemaining">Rp 0</div>
+        <div class="item-meta" id="userEstDate" style="margin-top: 8px;">Estimasi: -</div>
       </div>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon si-teal">📅</div>
-        <div class="stat-value" id="userDayNum">—</div>
-        <div class="stat-label">Hari ke-</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon si-gold">💰</div>
-        <div class="stat-value" id="userDailyAvg">Rp 0</div>
-        <div class="stat-label">Rata-rata / hari</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon si-teal">👥</div>
-        <div class="stat-value" id="userNumPeople">—</div>
-        <div class="stat-label">Orang Berangkat</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon si-gold">🗓️</div>
-        <div class="stat-value" id="userEstDate" style="font-size:14px;">—</div>
-        <div class="stat-label">Estimasi Siap</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Tambah Tabungan</div>
-          <div class="card-sub">Catat setoran tabungan hari ini</div>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+      
+      <div class="card" style="margin-bottom: 0;">
+        <h3 class="card-title">Grafik Pertumbuhan</h3>
+        <div class="chart-container">
+          <canvas id="progressChart"></canvas>
         </div>
       </div>
-      <div class="savings-row">
-        <div class="form-group" style="margin:0">
-          <label>Jumlah (Rp)</label>
-          <div class="currency-wrap">
-            <span class="currency-prefix">Rp</span>
-            <input type="number" id="savingsAmount" placeholder="50000"
-              onkeypress="if(event.key==='Enter')addSavings()">
+
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div class="card" style="margin-bottom: 0;">
+          <h3 class="card-title">Catat Setoran Baru</h3>
+          <div class="form-group">
+            <label>Nominal Setoran (Rp)</label>
+            <input type="number" id="savingsAmount" class="form-control" placeholder="Contoh: 1000000">
           </div>
+          <div class="form-group">
+            <label>Keterangan</label>
+            <input type="text" id="savingsNote" class="form-control" placeholder="Alokasi bulan ini">
+          </div>
+          <button class="btn btn-accent" style="width: 100%;" onclick="addSavings()">Simpan Data</button>
         </div>
-        <button class="btn-add" onclick="addSavings()">+ Tambah</button>
-      </div>
-      <div class="form-group" style="margin-top:10px;margin-bottom:0">
-        <label>Catatan (opsional)</label>
-        <input type="text" id="savingsNote" placeholder="Gaji, rezeki nomplok, dll."
-          onkeypress="if(event.key==='Enter')addSavings()">
-      </div>
-    </div>
 
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Riwayat Tabungan</div>
-        <span style="font-size:12px;color:var(--text-soft)">10 terakhir</span>
-      </div>
-      <div id="savingsHistory" class="history-list">
-        <div class="empty-state">
-          <div class="es-icon">📭</div>
-          <p>Belum ada riwayat tabungan</p>
+        <div class="card" style="margin-bottom: 0; flex-grow: 1;">
+          <h3 class="card-title">Riwayat Terakhir</h3>
+          <div id="savingsHistory">
+            </div>
         </div>
       </div>
+      
     </div>
-
   </div>
 </div>
 
 <div id="adminScreen" class="screen">
-  <nav class="top-nav">
-    <div class="nav-brand">
-      <div class="brand-icon">🕌</div>
-      <h2>NiatUmroh</h2>
-    </div>
-    <div class="nav-right">
-      <span class="badge admin">Admin</span>
-      <button class="btn-logout" onclick="handleLogout()">Keluar</button>
+  <nav class="navbar">
+    <div class="nav-brand">Portal Admin Umroh</div>
+    <div class="nav-user">
+      <span style="font-size: 12px; background: var(--border); padding: 4px 8px; border-radius: 4px;">Administrator</span>
+      <button class="btn btn-outline" onclick="handleLogout()">Keluar</button>
     </div>
   </nav>
 
-  <div class="main-content">
-    <div class="admin-hero">
-      <h2>Dashboard Admin 📊</h2>
-      <p>Pantau tabungan umroh seluruh anggota</p>
-    </div>
+  <div class="container">
+    <h2 style="font-size: 22px; font-weight: 600; margin-bottom: 24px;">Tinjauan Keseluruhan</h2>
 
-    <div class="admin-stats-row">
-      <div class="admin-stat">
-        <div class="admin-stat-icon">👥</div>
-        <div class="admin-stat-value" id="adminTotalUsers">0</div>
-        <div class="admin-stat-label">Total Anggota</div>
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">Total Akun Terdaftar</div>
+        <div class="kpi-value" id="adminTotalUsers">0</div>
       </div>
-      <div class="admin-stat">
-        <div class="admin-stat-icon">✅</div>
-        <div class="admin-stat-value" id="adminReadyUsers">0</div>
-        <div class="admin-stat-label">Siap Umroh</div>
+      <div class="kpi-card">
+        <div class="kpi-label">Akun Mencapai Target</div>
+        <div class="kpi-value highlight" id="adminReadyUsers">0</div>
       </div>
-      <div class="admin-stat">
-        <div class="admin-stat-icon">💰</div>
-        <div class="admin-stat-value" id="adminTotalCollected" style="font-size:18px;">—</div>
-        <div class="admin-stat-label">Terkumpul</div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Dana Terhimpun</div>
+        <div class="kpi-value" id="adminTotalCollected">Rp 0</div>
       </div>
     </div>
 
-    <div class="section-header">
-      <div class="section-title">Daftar Anggota</div>
-      <button class="btn-add-user" onclick="openAddUserModal()">＋ Tambah Anggota</button>
-    </div>
-    <div id="adminUserList" class="user-cards">
-      <div class="empty-state">
-        <div class="es-icon">👥</div>
-        <p>Belum ada anggota. Klik "+ Tambah Anggota" untuk mulai.</p>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+        <h3 style="font-size: 16px; font-weight: 600; color: var(--primary);">Manajemen Pengguna</h3>
+        <button class="btn btn-primary" onclick="openModal('addUserModal')">Registrasi Pengguna</button>
       </div>
+      <div id="adminUserList">
+        </div>
     </div>
-
   </div>
 </div>
 
-<div id="addUserModal" class="modal-overlay" onclick="closeOnBg(event,'addUserModal')">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">Tambah Anggota Baru</div>
+<div id="userSettingsModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Penyesuaian Target Tabungan</h3>
+      <button class="close-btn" onclick="closeModal('userSettingsModal')">&times;</button>
+    </div>
+    <div class="form-group">
+      <label>Jumlah Peserta Umroh</label>
+      <input type="number" id="editNumPeople" class="form-control" min="1">
+    </div>
+    <div class="form-group">
+      <label>Estimasi Biaya per Orang (Rp)</label>
+      <input type="number" id="editCost" class="form-control">
+    </div>
+    <div class="form-group">
+      <label>Komitmen Menabung Harian (Rp)</label>
+      <input type="number" id="editDaily" class="form-control" placeholder="Opsional untuk estimasi waktu">
+    </div>
+    <button class="btn btn-primary" style="width: 100%; margin-top: 16px;" onclick="saveUserSettings()">Perbarui Pengaturan</button>
+  </div>
+</div>
 
+<div id="addUserModal" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Registrasi Akun Baru</h3>
+      <button class="close-btn" onclick="closeModal('addUserModal')">&times;</button>
+    </div>
     <div class="form-group">
       <label>Nama Lengkap</label>
-      <input type="text" id="newName" placeholder="Ahmad Fauzi">
+      <input type="text" id="newName" class="form-control" placeholder="Chris John">
     </div>
     <div class="form-group">
-      <label>Username (tanpa spasi)</label>
-      <input type="text" id="newUsername" placeholder="ahmadfauzi">
+      <label>Username Akses</label>
+      <input type="text" id="newUsername" class="form-control" placeholder="chrisjohn">
     </div>
     <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="newPass" placeholder="Min. 6 karakter">
+      <label>Kata Sandi Default</label>
+      <input type="password" id="newPass" class="form-control" placeholder="Minimal 6 karakter">
     </div>
-
-    <div class="form-row">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
       <div class="form-group">
         <label>Jumlah Orang</label>
-        <input type="number" id="newPeople" placeholder="2" min="1" value="1">
+        <input type="number" id="newPeople" class="form-control" value="1">
       </div>
       <div class="form-group">
-        <label>Biaya / Orang (Rp)</label>
-        <input type="number" id="newCost" placeholder="30000000">
+        <label>Biaya/Orang (Rp)</label>
+        <input type="number" id="newCost" class="form-control" placeholder="Contoh: 35000000">
       </div>
     </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Target Harian (Rp)</label>
-        <input type="number" id="newDaily" placeholder="100000">
-      </div>
-      <div class="form-group">
-        <label>Tanggal Mulai</label>
-        <input type="date" id="newStart">
-      </div>
-    </div>
-
-    <button class="btn-primary" id="createUserBtn" onclick="createUser()">
-      Buat Akun Anggota
-    </button>
+    <button class="btn btn-primary" style="width: 100%; margin-top: 8px;" id="createUserBtn" onclick="createUser()">Proses Registrasi</button>
   </div>
 </div>
 
-<div id="userDetailModal" class="modal-overlay" onclick="closeOnBg(event,'userDetailModal')">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="detailName">—</div>
-
-    <div class="progress-wrap" style="margin-bottom:18px;">
-      <div class="progress-label" style="color:var(--text-soft)">
-        <span>Progress Tabungan</span>
-        <strong id="detailPct" style="color:var(--text-dark)">0%</strong>
-      </div>
-      <div class="progress-track" style="background:var(--teal-pale);">
-        <div class="progress-fill" id="detailBar"
-          style="width:0%;background:linear-gradient(90deg,var(--teal),var(--teal-light))"></div>
-      </div>
+<div id="userDetailModal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 id="detailName">Detail Pengguna</h3>
+      <button class="close-btn" onclick="closeModal('userDetailModal')">&times;</button>
     </div>
-
-    <div id="detailRows"></div>
-
-    <hr class="divider">
-
-    <div style="font-size:13px;font-weight:700;color:var(--text-mid);margin-bottom:12px;">
-      📋 Riwayat Tabungan
-    </div>
-    <div id="detailHistory" class="history-list"></div>
+    <div id="detailRows" style="margin-bottom: 24px;"></div>
+    <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">Log Transaksi Historis</h3>
+    <div id="detailHistory"></div>
   </div>
 </div>
 
 <script type="module">
-import { initializeApp }
-  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import {
-  getAuth, signInAnonymously, onAuthStateChanged
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import {
-  getFirestore, doc, setDoc, getDoc, getDocs,
-  collection, addDoc, query, orderBy, limit, where,
-  updateDoc, serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, addDoc, query, orderBy, limit, where, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyA5yOuh_8MFzY72mx1YDzBhnRBaHo9ao-A",
@@ -741,94 +348,51 @@ const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// STATE
-let currentUser    = null; // Menyimpan ID sesi manual
-let userProfile    = null;
-let usersCache     = [];
-let selectedDetail = null;
+let currentUser = null; 
+let userProfile = null;
+let usersCache = [];
+let chartInstance = null;
 
-// UTILS
-function rp(n) { return n == null ? '—' : 'Rp\u00a0' + Math.round(n).toLocaleString('id-ID'); }
-function rpShort(n) {
-  if (n == null) return '—';
-  if (n >= 1e9) return 'Rp\u00a0' + (n/1e9).toFixed(1) + 'M';
-  if (n >= 1e6) return 'Rp\u00a0' + (n/1e6).toFixed(1) + 'jt';
-  if (n >= 1e3) return 'Rp\u00a0' + (n/1e3).toFixed(0) + 'rb';
-  return 'Rp\u00a0' + n;
-}
+// Utility Formatting
+function rp(n) { return n == null ? '-' : 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
 function fmtDate(ts) {
-  if (!ts) return '—';
+  if (!ts) return '-';
   const d = ts?.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric'});
-}
-function daysSince(ts) {
-  if (!ts) return 1;
-  const d = ts?.toDate ? ts.toDate() : new Date(ts);
-  return Math.max(1, Math.floor((Date.now() - d.getTime()) / 86400000) + 1);
-}
-function pctOf(saved, target) { return target ? Math.min(100, (saved / target) * 100) : 0; }
-function statusOf(saved, target, dailyTarget) {
-  const pct = pctOf(saved, target);
-  if (pct >= 100) return { label:'✅ Siap Berangkat Umroh!', cls:'ready' };
-  const rem = Math.max(0, target - saved);
-  if (dailyTarget > 0) {
-    const days = Math.ceil(rem / dailyTarget);
-    if (days <= 30) return { label:`🌙 ${days} hari lagi menuju siap umroh`, cls:'soon' };
-    return { label:`📈 ${days} hari lagi menuju target`, cls:'saving' };
-  }
-  return { label:'💰 Sedang menabung...', cls:'saving' };
 }
 
 window.showToast = function(msg, type='') {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast ' + type + ' show';
-  clearTimeout(t._tid);
-  t._tid = setTimeout(() => t.classList.remove('show'), 3200);
+  t.className = type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
 };
 
 function showScreen(id) {
-  ['loginScreen','userScreen','adminScreen'].forEach(s => {
-    const el = document.getElementById(s);
-    el.style.display = 'none';
-    el.classList.remove('active');
-  });
-  const el = document.getElementById(id);
-  el.style.display = 'block';
-  el.classList.add('active');
-}
-function hideLoading() {
-  const ol = document.getElementById('loadingOverlay');
-  ol.style.opacity = '0';
-  setTimeout(() => ol.style.display = 'none', 400);
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
 }
 
-// ═══════════════════════════════════════════
-//  AUTH (Anonymous + Sesi Manual via Firestore)
-// ═══════════════════════════════════════════
+window.openModal = function(id) { document.getElementById(id).classList.add('open'); }
+window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── AUTHENTICATION LOGIC ──
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    // Selalu login secara anonymous agar bisa akses database
-    try {
-      await signInAnonymously(auth);
-    } catch(e) {
-      showToast('Gagal terhubung ke database', 'error');
-      hideLoading();
-    }
+    try { await signInAnonymously(auth); } catch(e) { console.error("Database connection failed"); }
   } else {
-    // Jika sudah konek anonymous, cek apakah ada sesi user manual di localStorage
     await checkSession();
   }
 });
 
 async function checkSession() {
-  const savedUid = localStorage.getItem('niatUmrohUid');
+  const savedUid = localStorage.getItem('sistemUmrohUid');
   if (savedUid) {
     try {
       const snap = await getDoc(doc(db, 'userProfiles', savedUid));
       if (snap.exists()) {
         userProfile = snap.data();
-        currentUser = { uid: savedUid }; // Mock objek currentUser
+        currentUser = { uid: savedUid }; 
         if (userProfile.role === 'admin') {
           showScreen('adminScreen');
           loadAdminDashboard();
@@ -836,17 +400,9 @@ async function checkSession() {
           showScreen('userScreen');
           loadUserDashboard();
         }
-      } else {
-        window.handleLogout(); // Dokumen dihapus/hilang, paksa logout
-      }
-    } catch(e) {
-      showToast('Gagal memuat profil', 'error');
-      showScreen('loginScreen');
-    }
-  } else {
-    showScreen('loginScreen');
-  }
-  hideLoading();
+      } else { window.handleLogout(); }
+    } catch(e) { showScreen('loginScreen'); }
+  } else { showScreen('loginScreen'); }
 }
 
 window.handleLogin = async function() {
@@ -854,205 +410,225 @@ window.handleLogin = async function() {
   const pass     = document.getElementById('loginPassword').value;
   const btn      = document.getElementById('loginBtn');
   
-  if (!username || !pass) { showToast('Isi username dan password', 'error'); return; }
-  
-  btn.textContent = 'Memuat...';
-  btn.disabled = true;
+  if (!username || !pass) { showToast('Kredensial tidak lengkap', 'error'); return; }
+  btn.textContent = 'Memverifikasi...'; btn.disabled = true;
   
   try {
-    // Cari user berdasarkan username dan password secara langsung
-    const q = query(
-      collection(db, 'userProfiles'), 
-      where('username', '==', username), 
-      where('password', '==', pass)
-    );
-    
+    const q = query(collection(db, 'userProfiles'), where('username', '==', username), where('password', '==', pass));
     const snap = await getDocs(q);
     
     if (!snap.empty) {
-      const userDoc = snap.docs[0];
-      // Simpan ID dokumen ke localStorage sebagai sesi
-      localStorage.setItem('niatUmrohUid', userDoc.id);
+      localStorage.setItem('sistemUmrohUid', snap.docs[0].id);
       await checkSession();
-    } else {
-      showToast('Username atau password salah', 'error');
-    }
-  } catch(e) {
-    showToast('Gagal masuk: ' + e.message, 'error');
-  }
+    } else { showToast('Autentikasi gagal', 'error'); }
+  } catch(e) { showToast('Terjadi kesalahan server', 'error'); }
   
-  btn.textContent = 'Masuk';
-  btn.disabled = false;
+  btn.textContent = 'Masuk Akses'; btn.disabled = false;
 };
 
 window.handleLogout = function() {
-  localStorage.removeItem('niatUmrohUid');
-  currentUser = null;
-  userProfile = null;
+  localStorage.removeItem('sistemUmrohUid');
+  currentUser = null; userProfile = null;
   showScreen('loginScreen');
-  showToast('Berhasil keluar');
 };
 
-// ═══════════════════════════════════════════
-//  USER DASHBOARD
-// ═══════════════════════════════════════════
+// ── USER LOGIC ──
 async function loadUserDashboard() {
-  const p   = userProfile;
+  const p = userProfile;
   const uid = currentUser.uid;
 
-  document.getElementById('userNavName').textContent  = p.displayName.split(' ')[0];
-  document.getElementById('userHeroName').textContent = p.displayName;
-  document.getElementById('userNumPeople').textContent = (p.numPeople || 1) + ' orang';
+  document.getElementById('userNavName').textContent = p.displayName;
+  const target = (p.numPeople || 1) * (p.costPerPerson || 0);
+  const saved = p.totalSaved || 0;
+  const pct = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
+  const rem = Math.max(0, target - saved);
 
-  const target  = (p.numPeople || 1) * (p.costPerPerson || 0);
-  const saved   = p.totalSaved || 0;
-  const pct     = pctOf(saved, target);
-  const rem     = Math.max(0, target - saved);
-  const dayNum  = daysSince(p.startDate);
-  const avgDay  = dayNum > 0 ? saved / dayNum : 0;
-
+  document.getElementById('userTotalSaved').textContent = rp(saved);
   document.getElementById('userTotalTarget').textContent = rp(target);
-  document.getElementById('userTotalSaved').textContent  = rp(saved);
-  document.getElementById('userRemaining').textContent   = rp(rem);
-  document.getElementById('userProgressPct').textContent = pct.toFixed(1) + '%';
-  document.getElementById('userProgressBar').style.width = pct + '%';
-  document.getElementById('userDayNum').textContent      = dayNum;
-  document.getElementById('userDailyAvg').textContent    = rpShort(avgDay);
+  document.getElementById('userRemaining').textContent = rp(rem);
+  document.getElementById('userProgressPct').textContent = `${pct.toFixed(1)}% dari target tercapai`;
+  document.getElementById('userNumPeople').textContent = `Alokasi untuk ${p.numPeople || 1} orang`;
 
-  if (avgDay > 0 && rem > 0) {
-    const daysLeft = Math.ceil(rem / avgDay);
+  if (p.dailySavingsTarget > 0 && rem > 0) {
+    const daysLeft = Math.ceil(rem / p.dailySavingsTarget);
     const estD = new Date(Date.now() + daysLeft * 86400000);
-    document.getElementById('userEstDate').textContent =
-      estD.toLocaleDateString('id-ID', {month:'short', year:'numeric'});
+    document.getElementById('userEstDate').textContent = `Estimasi Selesai: ${fmtDate(estD)}`;
   } else if (rem <= 0 && target > 0) {
-    document.getElementById('userEstDate').textContent = 'Siap! ✅';
+    document.getElementById('userEstDate').textContent = 'Status: Target Terpenuhi';
   } else {
-    document.getElementById('userEstDate').textContent = '—';
+    document.getElementById('userEstDate').textContent = 'Status: Dalam proses';
   }
 
-  const st = statusOf(saved, target, p.dailySavingsTarget || 0);
-  document.getElementById('userStatusWrap').innerHTML =
-    `<div class="status-pill ${st.cls}">${st.label}</div>`;
-
-  const q = query(collection(db, 'savingsEntries', uid, 'logs'), orderBy('date', 'desc'), limit(10));
+  // Fetch History for List & Chart
+  const q = query(collection(db, 'savingsEntries', uid, 'logs'), orderBy('date', 'asc'));
   const snap = await getDocs(q);
   const entries = [];
   snap.forEach(d => entries.push({ id:d.id, ...d.data() }));
-  renderHistory('savingsHistory', entries);
+  
+  renderHistoryList(entries.slice().reverse().slice(0, 5)); // Last 5 for list
+  renderChart(entries, target);
 }
 
-function renderHistory(containerId, entries) {
-  const el = document.getElementById(containerId);
+function renderHistoryList(entries) {
+  const el = document.getElementById('savingsHistory');
   if (!entries.length) {
-    el.innerHTML = `<div class="empty-state"><div class="es-icon">📭</div><p>Belum ada riwayat</p></div>`;
+    el.innerHTML = `<div style="padding:16px 0; color:var(--text-muted); font-size:13px;">Belum ada data transaksi tercatat.</div>`;
     return;
   }
   el.innerHTML = entries.map(e => `
-    <div class="history-item">
-      <div class="hi-left">
-        <div class="hi-dot"></div>
-        <div>
-          <div class="hi-date">${fmtDate(e.date)}</div>
-          ${e.note ? `<div class="hi-note">${e.note}</div>` : ''}
-        </div>
+    <div class="list-item">
+      <div>
+        <div class="item-title">${e.note || 'Setoran Reguler'}</div>
+        <div class="item-meta">${fmtDate(e.date)}</div>
       </div>
-      <div class="hi-amount">+${rp(e.amount)}</div>
+      <div class="item-value" style="color: var(--success);">+ ${rp(e.amount)}</div>
     </div>
   `).join('');
 }
 
+function renderChart(entries, targetAmount) {
+  const ctx = document.getElementById('progressChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  let cumulative = 0;
+  const labels = entries.map(e => fmtDate(e.date));
+  const dataPoints = entries.map(e => {
+    cumulative += e.amount;
+    return cumulative;
+  });
+
+  // Jika data kosong, beri data placeholder
+  if(dataPoints.length === 0) {
+    labels.push(fmtDate(new Date()));
+    dataPoints.push(0);
+  }
+
+  const targetLine = new Array(labels.length).fill(targetAmount);
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Akumulasi Tabungan',
+          data: dataPoints,
+          borderColor: '#0284c7',
+          backgroundColor: 'rgba(2, 132, 199, 0.1)',
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2
+        },
+        {
+          label: 'Garis Target',
+          data: targetLine,
+          borderColor: '#cbd5e1',
+          borderDash: [5, 5],
+          pointRadius: 0,
+          borderWidth: 2,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: {family: 'Inter'} } } },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: (val) => 'Rp ' + (val/1000000) + 'M', font: {family: 'Inter'} } },
+        x: { ticks: { font: {family: 'Inter'} } }
+      }
+    }
+  });
+}
+
 window.addSavings = async function() {
-  const amt  = parseFloat(document.getElementById('savingsAmount').value);
-  const note = document.getElementById('savingsNote').value.trim();
-  if (!amt || amt <= 0) { showToast('Masukkan jumlah tabungan yang valid', 'error'); return; }
+  const amtInput = document.getElementById('savingsAmount');
+  const noteInput = document.getElementById('savingsNote');
+  const amt = parseFloat(amtInput.value);
+  const note = noteInput.value.trim();
+  
+  if (!amt || amt <= 0) { showToast('Verifikasi nominal setoran', 'error'); return; }
 
   try {
-    const uid      = currentUser.uid;
+    const uid = currentUser.uid;
     const newTotal = (userProfile.totalSaved || 0) + amt;
 
-    await addDoc(collection(db, 'savingsEntries', uid, 'logs'), {
-      amount: amt, note: note || '', date: serverTimestamp()
-    });
-    await updateDoc(doc(db, 'userProfiles', uid), {
-      totalSaved: newTotal, lastSavedAt: serverTimestamp()
-    });
+    await addDoc(collection(db, 'savingsEntries', uid, 'logs'), { amount: amt, note: note || '', date: serverTimestamp() });
+    await updateDoc(doc(db, 'userProfiles', uid), { totalSaved: newTotal, lastSavedAt: serverTimestamp() });
 
     userProfile.totalSaved = newTotal;
-    document.getElementById('savingsAmount').value = '';
-    document.getElementById('savingsNote').value   = '';
-    showToast('Tabungan berhasil ditambahkan! 🎉', 'success');
+    amtInput.value = ''; noteInput.value = '';
+    showToast('Data berhasil dibukukan', 'success');
     loadUserDashboard();
-  } catch(e) {
-    showToast('Gagal menyimpan: ' + e.message, 'error');
-  }
+  } catch(e) { showToast('Gagal memproses data', 'error'); }
 };
 
-// ═══════════════════════════════════════════
-//  ADMIN DASHBOARD
-// ═══════════════════════════════════════════
+window.openUserSettings = function() {
+  document.getElementById('editNumPeople').value = userProfile.numPeople || 1;
+  document.getElementById('editCost').value = userProfile.costPerPerson || 0;
+  document.getElementById('editDaily').value = userProfile.dailySavingsTarget || 0;
+  openModal('userSettingsModal');
+}
+
+window.saveUserSettings = async function() {
+  const numP = parseInt(document.getElementById('editNumPeople').value) || 1;
+  const cost = parseFloat(document.getElementById('editCost').value) || 0;
+  const daily = parseFloat(document.getElementById('editDaily').value) || 0;
+
+  try {
+    await updateDoc(doc(db, 'userProfiles', currentUser.uid), {
+      numPeople: numP, costPerPerson: cost, dailySavingsTarget: daily
+    });
+    userProfile.numPeople = numP;
+    userProfile.costPerPerson = cost;
+    userProfile.dailySavingsTarget = daily;
+    closeModal('userSettingsModal');
+    loadUserDashboard();
+    showToast('Konfigurasi diperbarui', 'success');
+  } catch(e) { showToast('Gagal menyimpan konfigurasi', 'error'); }
+}
+
+// ── ADMIN LOGIC ──
 async function loadAdminDashboard() {
   const snap = await getDocs(collection(db, 'userProfiles'));
   usersCache = [];
-  snap.forEach(d => {
-    if (d.data().role !== 'admin') usersCache.push({ uid:d.id, ...d.data() });
-  });
-
   let ready = 0, totalCollected = 0;
-  usersCache.forEach(u => {
-    const tgt   = (u.numPeople||1)*(u.costPerPerson||0);
-    const saved = u.totalSaved || 0;
-    totalCollected += saved;
-    if (saved >= tgt && tgt > 0) ready++;
+
+  snap.forEach(d => {
+    const data = d.data();
+    if (data.role !== 'admin') {
+      usersCache.push({ uid:d.id, ...data });
+      const tgt = (data.numPeople||1)*(data.costPerPerson||0);
+      const saved = data.totalSaved || 0;
+      totalCollected += saved;
+      if (saved >= tgt && tgt > 0) ready++;
+    }
   });
 
-  document.getElementById('adminTotalUsers').textContent     = usersCache.length;
-  document.getElementById('adminReadyUsers').textContent     = ready;
-  document.getElementById('adminTotalCollected').textContent = rpShort(totalCollected);
+  document.getElementById('adminTotalUsers').textContent = usersCache.length;
+  document.getElementById('adminReadyUsers').textContent = ready;
+  document.getElementById('adminTotalCollected').textContent = rp(totalCollected);
 
   const container = document.getElementById('adminUserList');
-  if (!usersCache.length) {
-    container.innerHTML = `<div class="empty-state"><div class="es-icon">👥</div><p>Belum ada anggota.</p></div>`;
-    return;
-  }
   container.innerHTML = usersCache.map(u => {
-    const tgt   = (u.numPeople||1) * (u.costPerPerson||0);
+    const tgt = (u.numPeople||1) * (u.costPerPerson||0);
     const saved = u.totalSaved || 0;
-    const pct   = pctOf(saved, tgt);
-    const st    = statusOf(saved, tgt, u.dailySavingsTarget||0);
-    const day   = daysSince(u.startDate);
+    const pct = tgt > 0 ? Math.min(100, (saved / tgt) * 100) : 0;
+    
     return `
-      <div class="user-card">
-        <div class="uc-top">
-          <div>
-            <div class="uc-name">${u.displayName}</div>
-            <div class="uc-meta">${u.numPeople||1} orang · Hari ke-${day}</div>
+      <div class="list-item" style="padding: 16px 0;">
+        <div style="flex-grow: 1;">
+          <div class="item-title">${u.displayName} (@${u.username})</div>
+          <div class="item-meta">Terkumpul: ${rp(saved)} / ${rp(tgt)}</div>
+          <div style="height: 6px; background: var(--border); border-radius: 4px; margin-top: 8px; overflow: hidden; max-width: 250px;">
+            <div style="height: 100%; width: ${pct}%; background: var(--accent);"></div>
           </div>
-          <button class="btn-detail" onclick="openUserDetail('${u.uid}')">Detail</button>
         </div>
-        <div class="uc-progress">
-          <div class="uc-prog-top">
-            <span class="status-pill ${st.cls}" style="padding:3px 10px;font-size:11px;margin:0;">${st.label}</span>
-            <span class="uc-prog-pct">${pct.toFixed(0)}%</span>
-          </div>
-          <div class="mini-track"><div class="mini-fill" style="width:${pct}%"></div></div>
-        </div>
-        <div class="uc-stats">
-          <div class="uc-stat">Terkumpul: <strong>${rpShort(saved)}</strong></div>
-          <div class="uc-stat">Target: <strong>${rpShort(tgt)}</strong></div>
-          <div class="uc-stat">Sisa: <strong>${rpShort(Math.max(0,tgt-saved))}</strong></div>
-        </div>
+        <button class="btn btn-outline" onclick="openUserDetail('${u.uid}')">Detail</button>
       </div>
     `;
   }).join('');
 }
-
-// ═══════════════════════════════════════════
-//  CREATE USER (admin)
-// ═══════════════════════════════════════════
-window.openAddUserModal = function() {
-  document.getElementById('newStart').value = new Date().toISOString().split('T')[0];
-  document.getElementById('addUserModal').classList.add('open');
-};
 
 window.createUser = async function() {
   const name     = document.getElementById('newName').value.trim();
@@ -1060,131 +636,56 @@ window.createUser = async function() {
   const pass     = document.getElementById('newPass').value;
   const people   = parseInt(document.getElementById('newPeople').value) || 1;
   const cost     = parseFloat(document.getElementById('newCost').value) || 0;
-  const daily    = parseFloat(document.getElementById('newDaily').value) || 0;
-  const startV   = document.getElementById('newStart').value;
 
-  if (!name || !username || !pass) {
-    showToast('Nama, username, dan password wajib diisi', 'error'); return;
-  }
-  if (pass.length < 6) { showToast('Password minimal 6 karakter', 'error'); return; }
-
-  const btn = document.getElementById('createUserBtn');
-  btn.textContent = 'Membuat akun...'; btn.disabled = true;
-
+  if (!name || !username || !pass) { showToast('Formulir tidak lengkap', 'error'); return; }
+  
   try {
-    // Cek apakah username sudah ada
     const checkQ = query(collection(db, 'userProfiles'), where('username', '==', username));
     const snapCheck = await getDocs(checkQ);
-    if (!snapCheck.empty) {
-      showToast('Username sudah dipakai, pilih yang lain', 'error');
-      btn.textContent = 'Buat Akun Anggota'; btn.disabled = false;
-      return;
-    }
+    if (!snapCheck.empty) { showToast('Username telah terdaftar', 'error'); return; }
 
-    // Tambah dokumen langsung tanpa create Auth User (karena kita pakai Anonymous)
     await addDoc(collection(db, 'userProfiles'), {
-      displayName:       name,
-      username:          username,
-      password:          pass, // Peringatan: Disimpan dalam plain text
-      role:              'user',
-      numPeople:         people,
-      costPerPerson:     cost,
-      dailySavingsTarget: daily,
-      startDate:         startV ? new Date(startV) : new Date(),
-      totalSaved:        0,
-      createdAt:         serverTimestamp(),
-      createdBy:         currentUser.uid
+      displayName: name, username: username, password: pass,
+      role: 'user', numPeople: people, costPerPerson: cost,
+      dailySavingsTarget: 0, startDate: serverTimestamp(), totalSaved: 0
     });
 
-    ['newName','newUsername','newPass','newCost','newDaily'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('newPeople').value = '1';
-
-    document.getElementById('addUserModal').classList.remove('open');
-    showToast(`Akun ${name} berhasil dibuat! 🎉`, 'success');
-    await loadAdminDashboard();
-  } catch(e) {
-    showToast('Gagal membuat akun: ' + e.message, 'error');
-  }
-
-  btn.textContent = 'Buat Akun Anggota'; btn.disabled = false;
+    closeModal('addUserModal');
+    loadAdminDashboard();
+    showToast('Registrasi berhasil', 'success');
+  } catch(e) { showToast('Terjadi kesalahan', 'error'); }
 };
 
-// ═══════════════════════════════════════════
-//  USER DETAIL (admin)
-// ═══════════════════════════════════════════
 window.openUserDetail = async function(uid) {
-  selectedDetail = usersCache.find(u => u.uid === uid);
-  if (!selectedDetail) return;
+  const u = usersCache.find(x => x.uid === uid);
+  if (!u) return;
 
-  const u   = selectedDetail;
   const tgt = (u.numPeople||1) * (u.costPerPerson||0);
   const saved = u.totalSaved || 0;
-  const pct   = pctOf(saved, tgt);
-  const rem   = Math.max(0, tgt - saved);
-  const day   = daysSince(u.startDate);
-  const avg   = day > 0 ? saved / day : 0;
-  const st    = statusOf(saved, tgt, u.dailySavingsTarget||0);
 
-  let estTxt = '—';
-  if (saved >= tgt && tgt > 0) {
-    estTxt = 'Siap! ✅';
-  } else if (avg > 0) {
-    const dLeft = Math.ceil(rem / avg);
-    const estD  = new Date(Date.now() + dLeft * 86400000);
-    estTxt = estD.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) + ` (${dLeft} hari lagi)`;
-  }
-
-  document.getElementById('detailName').textContent  = u.displayName;
-  document.getElementById('detailPct').textContent   = pct.toFixed(1) + '%';
-  document.getElementById('detailBar').style.width   = pct + '%';
-
+  document.getElementById('detailName').textContent = u.displayName;
   document.getElementById('detailRows').innerHTML = `
-    <div class="detail-row"><span class="dl">Username</span><span class="dv">${u.username}</span></div>
-    <div class="detail-row"><span class="dl">Status</span>
-      <span class="status-pill ${st.cls}" style="padding:3px 10px;font-size:11px;margin:0">${st.label}</span></div>
-    <div class="detail-row"><span class="dl">Jumlah Orang</span><span class="dv">${u.numPeople||1} orang</span></div>
-    <div class="detail-row"><span class="dl">Biaya / Orang</span><span class="dv">${rp(u.costPerPerson)}</span></div>
-    <div class="detail-row"><span class="dl">Total Target</span><span class="dv">${rp(tgt)}</span></div>
-    <div class="detail-row"><span class="dl">Total Terkumpul</span><span class="dv green">${rp(saved)}</span></div>
-    <div class="detail-row"><span class="dl">Sisa Kebutuhan</span><span class="dv orange">${rp(rem)}</span></div>
-    <div class="detail-row"><span class="dl">Hari ke-</span><span class="dv">${day}</span></div>
-    <div class="detail-row"><span class="dl">Mulai Menabung</span><span class="dv">${fmtDate(u.startDate)}</span></div>
-    <div class="detail-row"><span class="dl">Target Harian</span><span class="dv">${rp(u.dailySavingsTarget)}</span></div>
-    <div class="detail-row"><span class="dl">Rata-rata Harian</span><span class="dv">${rp(avg)}</span></div>
-    <div class="detail-row"><span class="dl">Estimasi Siap</span><span class="dv" style="font-size:12px">${estTxt}</span></div>
+    <div class="list-item"><span class="item-meta">Username</span><span class="item-title">${u.username}</span></div>
+    <div class="list-item"><span class="item-meta">Alokasi</span><span class="item-title">${u.numPeople||1} Orang</span></div>
+    <div class="list-item"><span class="item-meta">Total Target</span><span class="item-title">${rp(tgt)}</span></div>
+    <div class="list-item"><span class="item-meta">Terhimpun</span><span class="item-title" style="color:var(--success)">${rp(saved)}</span></div>
   `;
 
-  const q = query(collection(db, 'savingsEntries', uid, 'logs'), orderBy('date', 'desc'), limit(15));
+  const q = query(collection(db, 'savingsEntries', uid, 'logs'), orderBy('date', 'desc'), limit(10));
   const snap = await getDocs(q);
   const entries = [];
   snap.forEach(d => entries.push({ id:d.id, ...d.data() }));
-  renderHistory('detailHistory', entries);
+  
+  const histEl = document.getElementById('detailHistory');
+  histEl.innerHTML = entries.map(e => `
+    <div class="list-item">
+      <div><div class="item-title">${e.note || '-'}</div><div class="item-meta">${fmtDate(e.date)}</div></div>
+      <div class="item-value" style="color:var(--success)">+${rp(e.amount)}</div>
+    </div>
+  `).join('');
 
-  document.getElementById('userDetailModal').classList.add('open');
+  openModal('userDetailModal');
 };
-
-// MODAL HELPERS
-window.closeOnBg = function(e, id) {
-  if (e.target === document.getElementById(id))
-    document.getElementById(id).classList.remove('open');
-};
-
-document.getElementById('loginPassword').addEventListener('keypress', e => {
-  if (e.key === 'Enter') handleLogin();
-});
-document.getElementById('loginUsername').addEventListener('keypress', e => {
-  if (e.key === 'Enter') document.getElementById('loginPassword').focus();
-});
-
-['addUserModal','userDetailModal'].forEach(id => {
-  const modal = document.querySelector(`#${id} .modal`);
-  let startY = 0;
-  modal.addEventListener('touchstart', e => { startY = e.touches[0].clientY; });
-  modal.addEventListener('touchend',   e => {
-    if (e.changedTouches[0].clientY - startY > 60)
-      document.getElementById(id).classList.remove('open');
-  });
-});
 </script>
 </body>
 </html>
