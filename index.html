@@ -3,89 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Aplikasi Tabungan Umroh</title>
+  <title>Portal Tabungan Umroh Premium</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg-base: #f8fafc;
+      /* FinTech Premium Palette */
+      --bg-base: #f4f7f6;
       --bg-panel: #ffffff;
-      --text-main: #0f172a;
-      --text-dim: #64748b;
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --border-light: #e2e8f0;
-      --success: #059669;
-      --alert: #dc2626;
-      --radius: 8px;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      --text-main: #111827;
+      --text-dim: #6b7280;
+      --brand-primary: #047857; /* Emerald 700 */
+      --brand-secondary: #059669; /* Emerald 600 */
+      --brand-accent: #d97706; /* Amber 600 */
+      --brand-accent-light: #fef3c7;
+      --border-light: #e5e7eb;
+      --success: #10b981;
+      --alert: #ef4444;
+      
+      /* Radius & Shadows */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-    body { background-color: var(--bg-base); color: var(--text-main); min-height: 100vh; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background-color: var(--bg-base); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
     
     .screen { display: none; padding-bottom: 40px; }
-    .screen.active { display: block; }
-    .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
-
-    nav { background: var(--bg-panel); border-bottom: 1px solid var(--border-light); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
-    .brand { font-weight: 700; font-size: 18px; color: var(--text-main); letter-spacing: -0.5px; }
+    .screen.active { display: block; animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     
-    button { cursor: pointer; border: none; border-radius: var(--radius); font-weight: 500; padding: 10px 16px; transition: 0.2s; font-size: 14px; }
-    .btn-primary { background: var(--accent); color: white; }
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-secondary { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-light); }
-    .btn-secondary:hover { background: #e2e8f0; }
-    .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border-light); }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; width: 100%; }
+
+    /* Navigation - Glassmorphism */
+    nav { 
+      background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-light); padding: 16px 20px; 
+      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 40; 
+    }
+    .brand { font-weight: 700; font-size: 18px; color: var(--brand-primary); letter-spacing: -0.5px; }
+    
+    /* Buttons */
+    button { cursor: pointer; border: none; border-radius: var(--radius-sm); font-weight: 600; padding: 12px 20px; transition: all 0.2s; font-size: 14px; letter-spacing: 0.2px; }
+    button:active { transform: scale(0.98); }
+    .btn-primary { background: var(--brand-primary); color: white; box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2); }
+    .btn-primary:hover { background: var(--brand-secondary); box-shadow: 0 6px 16px rgba(4, 120, 87, 0.3); }
+    .btn-secondary { background: #f3f4f6; color: var(--text-main); border: 1px solid var(--border-light); }
+    .btn-secondary:hover { background: #e5e7eb; }
+    .btn-ghost { background: transparent; color: var(--text-dim); }
     .btn-ghost:hover { background: var(--bg-base); color: var(--text-main); }
-    .btn-danger { background: #fef2f2; color: var(--alert); border: 1px solid #fecaca; padding: 6px 10px; font-size: 12px; }
+    .btn-danger { background: #fef2f2; color: var(--alert); border: 1px solid #fecaca; padding: 8px 14px; font-size: 12px; border-radius: var(--radius-sm); }
     .btn-danger:hover { background: #fee2e2; }
 
-    .card { background: var(--bg-panel); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border-light); padding: 24px; margin-bottom: 24px; }
-    .card-header { font-size: 16px; font-weight: 600; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border-light); color: var(--text-main); }
+    /* Cards & Layout */
+    .card { background: var(--bg-panel); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid rgba(0,0,0,0.03); padding: 28px; margin-bottom: 24px; }
+    .card-header { font-size: 16px; font-weight: 600; margin-bottom: 24px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
 
-    .grid-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin: 24px 0; }
-    .kpi-box { padding: 16px; border-radius: var(--radius); background: var(--bg-base); border: 1px solid var(--border-light); }
-    .kpi-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 500; }
-    .kpi-val { font-size: 24px; font-weight: 700; color: var(--text-main); }
-    .kpi-sub { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
-
-    .grid-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
-    @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
-
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; font-weight: 500; }
-    input, select { width: 100%; padding: 10px 14px; border: 1px solid var(--border-light); border-radius: var(--radius); font-size: 14px; outline: none; transition: border-color 0.2s; }
-    input:focus, select:focus { border-color: var(--accent); }
-
-    .chart-box { height: 320px; width: 100%; position: relative; }
+    .grid-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 32px 0; }
+    .kpi-box { padding: 24px; border-radius: var(--radius-md); background: var(--bg-panel); box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); position: relative; overflow: hidden; }
+    .kpi-box::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--border-light); }
+    .kpi-box.primary-kpi::before { background: var(--brand-primary); }
+    .kpi-box.accent-kpi::before { background: var(--brand-accent); }
     
-    .log-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-light); }
+    .kpi-label { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; font-weight: 600; }
+    .kpi-val { font-size: 28px; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; }
+    .kpi-sub { font-size: 13px; color: var(--text-dim); margin-top: 8px; font-weight: 500; }
+
+    /* Fix Horizontal Scroll on Mobile */
+    .grid-layout { display: grid; grid-template-columns: 1fr; gap: 24px; }
+    .grid-layout > div { min-width: 0; /* Mencegah elemen grid meluber */ }
+    @media (min-width: 1024px) { .grid-layout { grid-template-columns: 1.8fr 1.2fr; } }
+
+    /* Forms */
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500; }
+    input, select { width: 100%; padding: 14px 16px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 15px; outline: none; transition: all 0.2s; background: var(--bg-base); color: var(--text-main); }
+    input:focus, select:focus { border-color: var(--brand-primary); background: var(--bg-panel); box-shadow: 0 0 0 4px rgba(4, 120, 87, 0.1); }
+
+    /* Chart */
+    .chart-box { position: relative; height: 320px; width: 100%; max-width: 100%; }
+    
+    /* Lists */
+    .log-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border-light); }
     .log-item:last-child { border-bottom: none; }
-    .log-title { font-size: 14px; font-weight: 500; }
-    .log-date { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
-    .log-amt { font-size: 14px; font-weight: 600; color: var(--success); }
+    .log-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
+    .log-date { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+    .log-amt { font-size: 15px; font-weight: 700; color: var(--success); background: #dcfce7; padding: 6px 12px; border-radius: 20px; }
 
-    /* Expandable History */
     .history-hidden { display: none; }
-    .history-visible { display: block; }
-    .toggle-btn { width: 100%; text-align: center; background: #f8fafc; border: 1px dashed var(--border-light); padding: 10px; margin-top: 10px; color: var(--text-dim); cursor: pointer; font-size: 13px; border-radius: var(--radius); }
-    .toggle-btn:hover { background: #f1f5f9; color: var(--text-main); }
+    .history-visible { display: flex; }
+    .toggle-btn { width: 100%; text-align: center; background: transparent; border: 1px dashed var(--border-light); padding: 14px; margin-top: 16px; color: var(--brand-primary); cursor: pointer; font-size: 13px; border-radius: var(--radius-sm); font-weight: 600; }
+    .toggle-btn:hover { background: var(--bg-base); border-color: var(--brand-primary); }
 
-    .simulation-panel { background: #f8fafc; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-light); margin-top: 16px; }
-    .simulation-result { margin-top: 16px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius); font-size: 14px; color: #1e3a8a; line-height: 1.5; }
+    /* Simulation Panel */
+    .simulation-panel { background: var(--bg-base); padding: 24px; border-radius: var(--radius-md); border: 1px solid var(--border-light); margin-top: 24px; }
+    .simulation-result { margin-top: 20px; padding: 16px; background: var(--brand-accent-light); border: 1px solid #fcd34d; border-radius: var(--radius-sm); font-size: 14px; color: #92400e; line-height: 1.6; font-weight: 500; }
 
-    .login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: var(--bg-base); }
-    .login-box { background: var(--bg-panel); padding: 40px; border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; max-width: 380px; border: 1px solid var(--border-light); }
+    /* Auth */
+    .login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #f4f7f6 0%, #e5e7eb 100%); padding: 20px; }
+    .login-box { background: var(--bg-panel); padding: 48px 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.8); }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.2s; z-index: 50; }
+    /* Modals */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 50; padding: 20px; }
     .modal-overlay.open { opacity: 1; pointer-events: auto; }
-    .modal-content { background: var(--bg-panel); width: 100%; max-width: 500px; padding: 24px; border-radius: var(--radius); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); transform: translateY(20px); transition: 0.2s; max-height: 90vh; overflow-y: auto; }
-    .modal-overlay.open .modal-content { transform: translateY(0); }
-    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 18px; font-weight: 600; }
+    .modal-content { background: var(--bg-panel); width: 100%; max-width: 500px; padding: 32px; border-radius: var(--radius-lg); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); transform: scale(0.95); transition: 0.3s; max-height: 90vh; overflow-y: auto; }
+    .modal-overlay.open .modal-content { transform: scale(1); }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 20px; font-weight: 700; color: var(--text-main); }
 
-    #toast { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 100px); background: var(--text-main); color: white; padding: 12px 24px; border-radius: var(--radius); font-size: 14px; transition: 0.3s; z-index: 100; box-shadow: var(--shadow); }
+    /* Toast */
+    #toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 150px); background: #1f2937; color: white; padding: 14px 28px; border-radius: 30px; font-size: 14px; font-weight: 500; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2); white-space: nowrap; }
     #toast.show { transform: translate(-50%, 0); }
     #toast.alert { background: var(--alert); }
   </style>
@@ -97,16 +128,19 @@
 <div id="loginScreen" class="screen active">
   <div class="login-wrapper">
     <div class="login-box">
-      <h1 style="font-size: 20px; text-align: center; margin-bottom: 24px;">Aplikasi Tabungan Umroh</h1>
+      <div style="text-align: center; margin-bottom: 32px;">
+        <h1 style="font-size: 24px; font-weight: 700; color: var(--brand-primary); letter-spacing: -0.5px;">Tabungan Umroh</h1>
+        <p style="font-size: 14px; color: var(--text-dim); margin-top: 8px;">Manajemen finansial perjalanan spiritual Anda</p>
+      </div>
       <div class="form-group">
-        <label>Username</label>
+        <label>ID Pengguna</label>
         <input type="text" id="loginUsername" placeholder="Masukkan username" autocomplete="off">
       </div>
       <div class="form-group">
         <label>Kata Sandi</label>
         <input type="password" id="loginPassword" placeholder="••••••••">
       </div>
-      <button class="btn-primary" style="width: 100%; margin-top: 8px;" onclick="handleLogin()" id="loginBtn">Masuk</button>
+      <button class="btn-primary" style="width: 100%; margin-top: 16px; padding: 14px;" onclick="handleLogin()" id="loginBtn">Otorisasi Akses</button>
     </div>
   </div>
 </div>
@@ -115,54 +149,54 @@
   <nav>
     <div class="brand">TabungUmroh</div>
     <div style="display: flex; gap: 16px; align-items: center;">
-      <span id="userNavName" style="font-size: 14px; font-weight: 500;"></span>
-      <button class="btn-ghost" onclick="handleLogout()">Keluar</button>
+      <span id="userNavName" style="font-size: 14px; font-weight: 600; color: var(--text-main);"></span>
+      <button class="btn-ghost" style="padding: 8px 12px;" onclick="handleLogout()">Keluar</button>
     </div>
   </nav>
 
   <div class="container">
     <div class="grid-kpi">
-      <div class="kpi-box">
-        <div class="kpi-label">Total Tabungan</div>
-        <div class="kpi-val" style="color: var(--accent);" id="uiTotalSaved">Rp 0</div>
+      <div class="kpi-box primary-kpi">
+        <div class="kpi-label">Dana Terhimpun</div>
+        <div class="kpi-val" style="color: var(--brand-primary);" id="uiTotalSaved">Rp 0</div>
         <div class="kpi-sub" id="uiProgressText">0% dari target</div>
       </div>
-      <div class="kpi-box">
-        <div class="kpi-label">Target Keseluruhan</div>
-        <div class="kpi-val" id="uiTotalTarget">Rp 0</div>
-        <div class="kpi-sub" id="uiPeopleCount">Untuk 1 orang</div>
+      <div class="kpi-box accent-kpi">
+        <div class="kpi-label">Sisa Kebutuhan</div>
+        <div class="kpi-val" id="uiRemaining">Rp 0</div>
+        <div class="kpi-sub" id="uiEstDate">Menghitung kalkulasi...</div>
       </div>
       <div class="kpi-box">
-        <div class="kpi-label">Sisa Kekurangan</div>
-        <div class="kpi-val" id="uiRemaining">Rp 0</div>
-        <div class="kpi-sub" id="uiEstDate">Menghitung...</div>
+        <div class="kpi-label">Estimasi Target Keseluruhan</div>
+        <div class="kpi-val" style="font-size: 22px; margin-top: 4px;" id="uiTotalTarget">Rp 0</div>
+        <div class="kpi-sub" id="uiPeopleCount">Alokasi 1 orang</div>
       </div>
     </div>
 
     <div class="grid-layout">
-      
       <div>
         <div class="card">
-          <div class="card-header" style="margin-bottom: 12px;">Analisis & Simulasi Tabungan</div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-            <div class="kpi-box" style="margin: 0; padding: 12px;">
-              <div class="kpi-label">Rata-rata Menabung / Hari</div>
-              <div class="kpi-val" style="font-size: 18px;" id="statActualDaily">Rp 0</div>
+          <div class="card-header">Analisis & Simulasi Keuangan</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+            <div style="padding: 16px; background: var(--bg-base); border-radius: var(--radius-sm);">
+              <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 4px; font-weight: 600;">AKTUAL / HARI</div>
+              <div style="font-size: 18px; font-weight: 700; color: var(--text-main);" id="statActualDaily">Rp 0</div>
             </div>
-            <div class="kpi-box" style="margin: 0; padding: 12px;">
-              <div class="kpi-label">Rata-rata Menabung / Bulan</div>
-              <div class="kpi-val" style="font-size: 18px;" id="statActualMonthly">Rp 0</div>
+            <div style="padding: 16px; background: var(--bg-base); border-radius: var(--radius-sm);">
+              <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 4px; font-weight: 600;">AKTUAL / BULAN</div>
+              <div style="font-size: 18px; font-weight: 700; color: var(--text-main);" id="statActualMonthly">Rp 0</div>
             </div>
           </div>
           
           <div class="simulation-panel">
-            <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main);">Simulasi Tabungan Tetap</h4>
-            <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 10px;">Kalkulasi visual bila konsisten menabung sebesar:</p>
-            <div style="display: flex; gap: 12px;">
-              <div style="flex: 2;">
+            <div style="font-size: 15px; font-weight: 600; margin-bottom: 6px; color: var(--text-main);">Kalkulator Proyeksi Lunas</div>
+            <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 16px;">Masukkan nominal untuk melihat prediksi tanggal keberangkatan.</p>
+            
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <div style="flex: 2; min-width: 150px;">
                 <input type="number" id="simAmount" placeholder="Nominal (Rp)" oninput="runSimulation()">
               </div>
-              <div style="flex: 1;">
+              <div style="flex: 1; min-width: 120px;">
                 <select id="simPeriod" onchange="runSimulation()">
                   <option value="daily">Per Hari</option>
                   <option value="monthly">Per Bulan</option>
@@ -171,10 +205,10 @@
             </div>
             
             <div class="simulation-result" id="simResult">
-              Ketikkan angka di atas untuk melihat kapan tabungan Anda akan lunas.
+              Sistem menunggu input nominal untuk melakukan kalkulasi.
             </div>
 
-            <div class="chart-box" style="margin-top: 24px; display: none;" id="simChartWrapper">
+            <div class="chart-box" style="margin-top: 32px; display: none;" id="simChartWrapper">
               <canvas id="simChart"></canvas>
             </div>
           </div>
@@ -182,37 +216,37 @@
       </div>
 
       <div>
-        <div class="card" style="border: 1px solid var(--accent);">
-          <div class="card-header" style="color: var(--accent);">Catat Transaksi Cepat</div>
+        <div class="card" style="border-top: 4px solid var(--brand-primary);">
+          <div class="card-header" style="color: var(--brand-primary); margin-bottom: 16px;">Catat Setoran Baru</div>
           
           <div class="form-group">
-            <label>Tanggal Setoran</label>
+            <label>Tanggal Pembukuan</label>
             <input type="date" id="inputDate">
           </div>
           
-          <button class="btn-primary" style="width: 100%; margin-bottom: 12px; font-size: 15px; padding: 12px;" onclick="submitDailySavings()">
-            Setor Tabungan Harian (<span id="lblDailyTarget">Rp 0</span>)
+          <button class="btn-primary" style="width: 100%; margin-bottom: 16px; font-size: 15px; padding: 14px;" onclick="submitDailySavings()">
+            Setor Harian (<span id="lblDailyTarget">Rp 0</span>)
           </button>
           
-          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-            <button class="btn-secondary" style="flex: 1;" onclick="submitQuickAmount(50000)">+ 50.000</button>
-            <button class="btn-secondary" style="flex: 1;" onclick="submitQuickAmount(100000)">+ 100.000</button>
-            <button class="btn-secondary" style="flex: 1;" onclick="submitQuickAmount(500000)">+ 500.000</button>
+          <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+            <button class="btn-secondary" style="flex: 1; padding: 10px 0;" onclick="submitQuickAmount(50000)">+50Rb</button>
+            <button class="btn-secondary" style="flex: 1; padding: 10px 0;" onclick="submitQuickAmount(100000)">+100Rb</button>
+            <button class="btn-secondary" style="flex: 1; padding: 10px 0;" onclick="submitQuickAmount(500000)">+500Rb</button>
           </div>
 
-          <div style="border-top: 1px solid var(--border-light); margin-top: 16px; padding-top: 16px;">
-            <label style="font-size: 12px;">Atau nominal khusus (Rp)</label>
-            <div style="display: flex; gap: 8px;">
-              <input type="number" id="inputAmtCustom" placeholder="Misal: 250000" style="flex: 2;">
-              <button class="btn-ghost" style="flex: 1;" onclick="submitCustomAmount()">Simpan</button>
+          <div style="border-top: 1px solid var(--border-light); margin-top: 8px; padding-top: 20px;">
+            <label style="font-size: 12px; font-weight: 600;">NOMINAL SPESIFIK (Rp)</label>
+            <div style="display: flex; gap: 12px;">
+              <input type="number" id="inputAmtCustom" placeholder="Misal: 350000" style="flex: 2;">
+              <button class="btn-ghost" style="flex: 1; border: 1px solid var(--brand-primary); color: var(--brand-primary);" onclick="submitCustomAmount()">Simpan</button>
             </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-header" style="display: flex; justify-content: space-between;">
-            <span>Riwayat Tabungan</span>
-            <span style="font-size: 12px; font-weight: 400; cursor: pointer; color: var(--accent);" onclick="openSettingsModal()">Pengaturan Target</span>
+          <div class="card-header">
+            <span>Riwayat Transaksi</span>
+            <button class="btn-ghost" style="font-size: 12px; padding: 6px 10px;" onclick="openSettingsModal()">Atur Target</button>
           </div>
           <div id="historyListContainer">
             </div>
@@ -224,24 +258,24 @@
 
 <div id="adminScreen" class="screen">
   <nav>
-    <div class="brand">Dashboard Admin</div>
-    <button class="btn-ghost" onclick="handleLogout()">Keluar</button>
+    <div class="brand">Konsol Administrator</div>
+    <button class="btn-ghost" onclick="handleLogout()">Keluar Sesi</button>
   </nav>
   <div class="container">
     <div class="grid-kpi">
       <div class="kpi-box">
-        <div class="kpi-label">Total Pengguna</div>
+        <div class="kpi-label">Total Akun Pengguna</div>
         <div class="kpi-val" id="admUsers">0</div>
       </div>
-      <div class="kpi-box">
-        <div class="kpi-label">Total Dana Terkumpul</div>
-        <div class="kpi-val" id="admAssets">Rp 0</div>
+      <div class="kpi-box primary-kpi">
+        <div class="kpi-label">Akumulasi Dana Keseluruhan</div>
+        <div class="kpi-val" style="color: var(--brand-primary);" id="admAssets">Rp 0</div>
       </div>
     </div>
     <div class="card">
-      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <span>Daftar Pengguna</span>
-        <button class="btn-primary" onclick="openModal('modalAddUser')">Tambah Pengguna Baru</button>
+      <div class="card-header">
+        <span>Manajemen Klien</span>
+        <button class="btn-primary" onclick="openModal('modalAddUser')">Registrasi Klien Baru</button>
       </div>
       <div id="admUserList"></div>
     </div>
@@ -251,30 +285,30 @@
 <div id="modalSettings" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-head">
-      <span>Pengaturan Target Tabungan</span>
-      <span style="cursor: pointer; color: var(--text-dim);" onclick="closeModal('modalSettings')">✕</span>
+      <span>Parameter Target Keuangan</span>
+      <span style="cursor: pointer; color: var(--text-dim); padding: 4px;" onclick="closeModal('modalSettings')">✕</span>
     </div>
-    <div class="form-group"><label>Jumlah Orang yang Berangkat</label><input type="number" id="cfgPeople"></div>
-    <div class="form-group"><label>Biaya per Orang (Rp)</label><input type="number" id="cfgCost"></div>
-    <div class="form-group"><label>Target Tabungan Harian (Rp)</label><input type="number" id="cfgDaily" placeholder="Cth: 50000"></div>
-    <button class="btn-primary" style="width: 100%; margin-top: 16px;" onclick="saveSettings()">Simpan Pengaturan</button>
+    <div class="form-group"><label>Jumlah Orang Keberangkatan</label><input type="number" id="cfgPeople"></div>
+    <div class="form-group"><label>Biaya Estimasi per Orang (Rp)</label><input type="number" id="cfgCost"></div>
+    <div class="form-group"><label>Komitmen Tabungan Harian (Rp)</label><input type="number" id="cfgDaily" placeholder="Cth: 50000"></div>
+    <button class="btn-primary" style="width: 100%; margin-top: 16px; padding: 14px;" onclick="saveSettings()">Simpan Konfigurasi</button>
   </div>
 </div>
 
 <div id="modalAddUser" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-head">
-      <span>Pendaftaran Pengguna Baru</span>
-      <span style="cursor: pointer; color: var(--text-dim);" onclick="closeModal('modalAddUser')">✕</span>
+      <span>Pembuatan Entitas Baru</span>
+      <span style="cursor: pointer; color: var(--text-dim); padding: 4px;" onclick="closeModal('modalAddUser')">✕</span>
     </div>
-    <div class="form-group"><label>Nama Lengkap</label><input type="text" id="regName"></div>
-    <div class="form-group"><label>Username (Untuk Login)</label><input type="text" id="regUser"></div>
-    <div class="form-group"><label>Kata Sandi Default</label><input type="password" id="regPass"></div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-      <div class="form-group"><label>Jumlah Orang</label><input type="number" id="regPeople" value="1"></div>
+    <div class="form-group"><label>Nama Lengkap Identitas</label><input type="text" id="regName"></div>
+    <div class="form-group"><label>ID Akses (Username)</label><input type="text" id="regUser"></div>
+    <div class="form-group"><label>Kunci Keamanan (Password)</label><input type="password" id="regPass"></div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      <div class="form-group"><label>Alokasi Orang</label><input type="number" id="regPeople" value="1"></div>
       <div class="form-group"><label>Biaya per Orang (Rp)</label><input type="number" id="regCost"></div>
     </div>
-    <button class="btn-primary" style="width: 100%; margin-top: 16px;" onclick="registerClient()">Buat Akun</button>
+    <button class="btn-primary" style="width: 100%; margin-top: 16px; padding: 14px;" onclick="registerClient()">Proses Registrasi</button>
   </div>
 </div>
 
@@ -291,9 +325,9 @@ const db = getFirestore(app);
 let currentUser = null, userProfile = null, globalEntries = [], simChartInst = null;
 let showingAllHistory = false;
 
-// Format Rupiah Indonesia (menggunakan pemisah titik)
+// Format Angka Desimal Indonesia
 const fmtRp = n => n == null ? '-' : 'Rp ' + Math.round(n).toLocaleString('id-ID');
-const fmtDt = ts => ts ? (ts.toDate ? ts.toDate() : new Date(ts)).toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric'}) : '-';
+const fmtDt = ts => ts ? (ts.toDate ? ts.toDate() : new Date(ts)).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) : '-';
 
 window.showToast = (msg, type='') => { 
   const t = document.getElementById('toast'); 
@@ -321,14 +355,14 @@ async function checkSession() {
 
 window.handleLogin = async () => {
   const u = document.getElementById('loginUsername').value.trim(), p = document.getElementById('loginPassword').value;
-  if (!u || !p) return showToast('Harap isi username dan kata sandi', 'alert');
-  document.getElementById('loginBtn').innerText = 'Memverifikasi...';
+  if (!u || !p) return showToast('Otorisasi ditolak: Data tidak lengkap', 'alert');
+  document.getElementById('loginBtn').innerText = 'Memverifikasi Kredensial...';
   try {
     const q = query(collection(db, 'userProfiles'), where('username', '==', u), where('password', '==', p));
     const snap = await getDocs(q);
-    if (!snap.empty) { localStorage.setItem('sid_umroh', snap.docs[0].id); await checkSession(); } else showToast('Username atau sandi salah', 'alert');
-  } catch(e) { showToast('Tidak ada koneksi ke server', 'alert'); }
-  document.getElementById('loginBtn').innerText = 'Masuk';
+    if (!snap.empty) { localStorage.setItem('sid_umroh', snap.docs[0].id); await checkSession(); } else showToast('Kredensial tidak valid', 'alert');
+  } catch(e) { showToast('Kesalahan konektivitas', 'alert'); }
+  document.getElementById('loginBtn').innerText = 'Otorisasi Akses';
 };
 
 window.handleLogout = () => { localStorage.removeItem('sid_umroh'); currentUser = null; switchScreen('loginScreen'); };
@@ -339,14 +373,14 @@ async function loadUser() {
   document.getElementById('inputDate').valueAsDate = new Date();
   
   const dailyTgt = p.dailyTarget || 0;
-  document.getElementById('lblDailyTarget').textContent = dailyTgt > 0 ? fmtRp(dailyTgt) : 'Atur Dulu';
+  document.getElementById('lblDailyTarget').textContent = dailyTgt > 0 ? fmtRp(dailyTgt) : 'Belum Diatur';
 
   const tgt = (p.numPeople || 1) * (p.costPerPerson || 0), saved = p.totalSaved || 0, rem = Math.max(0, tgt - saved);
   
   document.getElementById('uiTotalSaved').textContent = fmtRp(saved);
   document.getElementById('uiTotalTarget').textContent = fmtRp(tgt);
   document.getElementById('uiRemaining').textContent = fmtRp(rem);
-  document.getElementById('uiProgressText').textContent = `${tgt > 0 ? (saved/tgt*100).toFixed(1) : 0}% terkumpul`;
+  document.getElementById('uiProgressText').textContent = `${tgt > 0 ? (saved/tgt*100).toFixed(1) : 0}% terealisasi`;
   document.getElementById('uiPeopleCount').textContent = `Untuk ${p.numPeople || 1} orang`;
 
   const q = query(collection(db, 'savingsEntries', currentUser.uid, 'logs'), orderBy('date', 'asc'));
@@ -360,12 +394,11 @@ async function loadUser() {
 function renderData(target, saved, rem) {
   const listEl = document.getElementById('historyListContainer');
   if (!globalEntries.length) {
-    listEl.innerHTML = '<div style="font-size:13px; color:var(--text-dim); padding:12px 0;">Belum ada riwayat tabungan.</div>';
+    listEl.innerHTML = '<div style="font-size:13px; color:var(--text-dim); padding:16px 0; text-align:center;">Sistem belum mencatat transaksi apapun.</div>';
     document.getElementById('statActualDaily').textContent = 'Rp 0';
     document.getElementById('statActualMonthly').textContent = 'Rp 0';
-    document.getElementById('uiEstDate').textContent = 'Belum ada data';
+    document.getElementById('uiEstDate').textContent = 'Menunggu data transaksi';
   } else {
-    // Generate History HTML
     const reversed = [...globalEntries].reverse();
     let historyHtml = '';
     
@@ -374,10 +407,10 @@ function renderData(target, saved, rem) {
       historyHtml += `
         <div class="log-item ${isHiddenClass}" id="row-${e.id}">
           <div>
-            <div class="log-title">${e.note || 'Tabungan'}</div>
+            <div class="log-title">${e.note || 'Penyetoran Dana'}</div>
             <div class="log-date">${fmtDt(e.date)}</div>
           </div>
-          <div style="display:flex; align-items:center; gap:12px;">
+          <div style="display:flex; align-items:center; gap:16px;">
             <div class="log-amt">+ ${fmtRp(e.amount)}</div>
             <button class="btn-danger" onclick="deleteTransaction('${e.id}', ${e.amount})">Hapus</button>
           </div>
@@ -386,13 +419,12 @@ function renderData(target, saved, rem) {
     });
 
     if (reversed.length > 3) {
-      const btnText = showingAllHistory ? 'Sembunyikan Sebagian' : `Lihat Semua Riwayat (${reversed.length})`;
+      const btnText = showingAllHistory ? 'Sembunyikan Sebagian' : `Muat Seluruh Riwayat (${reversed.length})`;
       historyHtml += `<button class="toggle-btn" onclick="toggleHistory()">${btnText}</button>`;
     }
     
     listEl.innerHTML = historyHtml;
     
-    // Kalkulasi Rata-rata
     const startObj = userProfile.startDate;
     const startMs = startObj ? (startObj.toDate ? startObj.toDate().getTime() : new Date(startObj).getTime()) : new Date().getTime();
     const daysActive = Math.max(1, Math.floor((Date.now() - startMs) / 86400000));
@@ -403,39 +435,27 @@ function renderData(target, saved, rem) {
     document.getElementById('statActualDaily').textContent = fmtRp(avgDaily);
     document.getElementById('statActualMonthly').textContent = fmtRp(avgMonthly);
 
-    if (rem <= 0) document.getElementById('uiEstDate').textContent = 'Lunas!';
+    if (rem <= 0) document.getElementById('uiEstDate').textContent = 'Kewajiban Terpenuhi';
     else if (avgDaily > 0) {
       const dLeft = Math.ceil(rem / avgDaily);
       const estD = new Date(Date.now() + dLeft * 86400000);
-      document.getElementById('uiEstDate').textContent = `Lunas pada: ${fmtDt(estD)}`;
-    } else document.getElementById('uiEstDate').textContent = 'Ayo mulai menabung!';
+      document.getElementById('uiEstDate').textContent = `Proyeksi Lunas: ${fmtDt(estD)}`;
+    } else document.getElementById('uiEstDate').textContent = 'Diperlukan setoran aktif';
   }
 }
 
-// Logika Buka/Tutup Riwayat
-window.toggleHistory = () => {
-  showingAllHistory = !showingAllHistory;
-  loadUser(); // Refresh UI untuk merender ulang tabel
-};
+window.toggleHistory = () => { showingAllHistory = !showingAllHistory; loadUser(); };
 
-// Logika Hapus Transaksi (Reset)
 window.deleteTransaction = async (docId, amount) => {
-  if(!confirm('Anda yakin ingin membatalkan setoran ini?')) return;
-  
+  if(!confirm('Konfirmasi: Cabut transaksi ini dari pembukuan?')) return;
   try {
     const newTotal = Math.max(0, (userProfile.totalSaved || 0) - amount);
-    
-    // Hapus dari Firestore
     await deleteDoc(doc(db, 'savingsEntries', currentUser.uid, 'logs', docId));
-    // Update Total Saved di Profil
     await updateDoc(doc(db, 'userProfiles', currentUser.uid), { totalSaved: newTotal });
-    
     userProfile.totalSaved = newTotal;
-    showToast('Setoran berhasil dibatalkan', 'success');
-    loadUser(); // Reload data
-  } catch(e) {
-    showToast('Gagal membatalkan setoran', 'alert');
-  }
+    showToast('Transaksi ditarik', 'success');
+    loadUser(); 
+  } catch(e) { showToast('Kegagalan sinkronisasi', 'alert'); }
 };
 
 window.runSimulation = () => {
@@ -448,34 +468,25 @@ window.runSimulation = () => {
   const rem = Math.max(0, tgt - saved);
 
   if (rem <= 0) { 
-    resEl.innerHTML = "Selamat! Tabungan Anda sudah lunas."; 
-    chartWrapper.style.display = 'none';
-    return; 
+    resEl.innerHTML = "Aset telah memenuhi batas target keseluruhan."; 
+    chartWrapper.style.display = 'none'; return; 
   }
   if (!amt || amt <= 0) { 
-    resEl.innerHTML = "Ketikkan angka nominal di atas untuk melihat proyeksi tabungan."; 
-    chartWrapper.style.display = 'none';
-    return; 
+    resEl.innerHTML = "Sistem menunggu input nominal untuk kalkulasi lintasan waktu."; 
+    chartWrapper.style.display = 'none'; return; 
   }
 
   chartWrapper.style.display = 'block';
-
   const dailyInput = period === 'monthly' ? amt / 30 : amt;
   const daysLeft = Math.ceil(rem / dailyInput);
   const estDate = new Date(Date.now() + daysLeft * 86400000);
   
   let timeStr = period === 'monthly' ? `${(daysLeft/30).toFixed(1)} bulan` : `${daysLeft} hari`;
   
-  resEl.innerHTML = `Jika Anda rutin menyetor <b>${fmtRp(amt)}</b> per ${period === 'monthly' ? 'bulan' : 'hari'}, sisa target akan terpenuhi dalam <b>${timeStr}</b>. <br><br>Estimasi Lunas: <b>${fmtDt(estDate)}</b>.`;
+  resEl.innerHTML = `Distribusi konstan senilai <b>${fmtRp(amt)}</b> per ${period === 'monthly' ? 'bulan' : 'hari'}, akan menutup defisit finansial dalam waktu <b>${timeStr}</b>.<br><br>Target Penyelesaian Eksekusi: <b>${fmtDt(estDate)}</b>.`;
 
-  // --- RENDERING GRAFIK SIMULASI ---
-  let simLabels = [];
-  let simData = [];
-  let currentDate = new Date();
-
-  // Batasi jumlah titik di grafik agar tidak terlalu rapat (maksimal ~10 titik)
-  let step = Math.ceil(daysLeft / 10);
-  if(step < 1) step = 1;
+  let simLabels = [], simData = [], currentDate = new Date();
+  let step = Math.ceil(daysLeft / 12); if(step < 1) step = 1;
 
   for(let i=0; i<=daysLeft; i+=step) {
      let d = new Date(currentDate.getTime() + i * 86400000);
@@ -483,12 +494,7 @@ window.runSimulation = () => {
      let projected = saved + (i * dailyInput);
      simData.push(projected > tgt ? tgt : projected);
   }
-  
-  // Pastikan titik terakhir menyentuh target pas di tanggal estimasi
-  if(simData[simData.length-1] < tgt) {
-     simLabels.push(fmtDt(estDate));
-     simData.push(tgt);
-  }
+  if(simData[simData.length-1] < tgt) { simLabels.push(fmtDt(estDate)); simData.push(tgt); }
 
   renderSimChart(simLabels, simData, tgt);
 };
@@ -498,10 +504,9 @@ function renderSimChart(labels, data, target) {
   if (simChartInst) simChartInst.destroy();
   if (labels.length === 0) return;
 
-  // Efek Gradien Biru
   let gradient = ctx.createLinearGradient(0, 0, 0, 320);
-  gradient.addColorStop(0, 'rgba(37, 99, 235, 0.4)');
-  gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+  gradient.addColorStop(0, 'rgba(4, 120, 87, 0.3)');
+  gradient.addColorStop(1, 'rgba(4, 120, 87, 0.0)');
 
   simChartInst = new Chart(ctx, {
     type: 'line', 
@@ -509,42 +514,28 @@ function renderSimChart(labels, data, target) {
       labels: labels, 
       datasets: [
         { 
-          label: 'Proyeksi Tabungan', 
+          label: 'Lintasan Proyeksi Aset', 
           data: data, 
-          borderColor: '#2563eb', 
+          borderColor: '#047857', 
           backgroundColor: gradient,
-          fill: true,
-          tension: 0.1,
-          pointRadius: 3,
-          pointHoverRadius: 6,
-          borderWidth: 2
+          fill: true, tension: 0.1, pointRadius: 3, pointHoverRadius: 6, borderWidth: 2
         }, 
         { 
-          label: 'Target Lunas', 
+          label: 'Garis Target Lunas', 
           data: Array(labels.length).fill(target), 
-          borderColor: '#94a3b8', 
-          borderDash: [5,5], 
-          pointRadius: 0,
-          borderWidth: 2,
-          fill: false
+          borderColor: '#9ca3af', borderDash: [5,5], pointRadius: 0, borderWidth: 2, fill: false
         }
       ] 
     },
     options: { 
-      responsive: true, 
-      maintainAspectRatio: false, 
-      interaction: { mode: 'index', intersect: false },
+      responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
       plugins: { 
-        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
-        tooltip: { callbacks: { label: (ctx) => 'Rp ' + ctx.parsed.y.toLocaleString('id-ID') } }
+        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8, font: {family: 'Inter'} } },
+        tooltip: { callbacks: { label: (ctx) => 'Rp ' + ctx.parsed.y.toLocaleString('id-ID') }, titleFont: {family: 'Inter'}, bodyFont: {family: 'Inter'} }
       }, 
       scales: { 
-        y: { 
-          beginAtZero: false, 
-          grid: { color: '#e2e8f0', drawBorder: false },
-          ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') } 
-        },
-        x: { grid: { display: false } }
+        y: { beginAtZero: false, grid: { color: '#f3f4f6', drawBorder: false }, ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID'), font: {family: 'Inter'} } },
+        x: { grid: { display: false }, ticks: { font: {family: 'Inter'} } }
       } 
     }
   });
@@ -552,44 +543,34 @@ function renderSimChart(labels, data, target) {
 
 window.submitDailySavings = async () => {
   const dateVal = document.getElementById('inputDate').value;
-  if(!dateVal) return showToast('Pilih tanggal dulu', 'alert');
-  
+  if(!dateVal) return showToast('Kalender pembukuan kosong', 'alert');
   const dailyAmt = parseFloat(userProfile.dailyTarget) || 0;
-  if(dailyAmt <= 0) return showToast('Atur Target Tabungan Harian dulu di menu Pengaturan', 'alert');
-  
-  await executeTransaction(dailyAmt, 'Setoran Reguler', new Date(dateVal));
+  if(dailyAmt <= 0) return showToast('Konfigurasi target harian wajib diisi terlebih dahulu', 'alert');
+  await executeTransaction(dailyAmt, 'Setoran Terjadwal', new Date(dateVal));
 };
 
 window.submitQuickAmount = async (amt) => {
   const dateVal = document.getElementById('inputDate').value;
-  if(!dateVal) return showToast('Pilih tanggal dulu', 'alert');
-  await executeTransaction(amt, 'Setoran Tambahan', new Date(dateVal));
+  if(!dateVal) return showToast('Kalender pembukuan kosong', 'alert');
+  await executeTransaction(amt, 'Setoran Cepat', new Date(dateVal));
 };
 
 window.submitCustomAmount = async () => {
   const amt = parseFloat(document.getElementById('inputAmtCustom').value);
-  if(!amt || amt <= 0) return showToast('Nominal salah', 'alert');
-  
+  if(!amt || amt <= 0) return showToast('Validasi nominal gagal', 'alert');
   const dateVal = document.getElementById('inputDate').value;
-  if(!dateVal) return showToast('Pilih tanggal dulu', 'alert');
-  
-  await executeTransaction(amt, 'Setoran Khusus', new Date(dateVal));
+  if(!dateVal) return showToast('Kalender pembukuan kosong', 'alert');
+  await executeTransaction(amt, 'Setoran Ekstra', new Date(dateVal));
 };
 
 async function executeTransaction(amount, note, dateObj) {
   try {
     const nt = (userProfile.totalSaved || 0) + amount;
-    const now = new Date();
-    dateObj.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
-
+    const now = new Date(); dateObj.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
     await addDoc(collection(db, 'savingsEntries', currentUser.uid, 'logs'), { amount: amount, note: note, date: dateObj });
     await updateDoc(doc(db, 'userProfiles', currentUser.uid), { totalSaved: nt, lastSavedAt: serverTimestamp() });
-    
-    userProfile.totalSaved = nt; 
-    document.getElementById('inputAmtCustom').value = ''; 
-    showToast('Transaksi berhasil disimpan!'); 
-    loadUser();
-  } catch(e) { showToast('Gagal menyimpan transaksi', 'alert'); }
+    userProfile.totalSaved = nt; document.getElementById('inputAmtCustom').value = ''; showToast('Dana berhasil dibukukan'); loadUser();
+  } catch(e) { showToast('Gangguan sistem database', 'alert'); }
 }
 
 window.openSettingsModal = () => { 
@@ -599,13 +580,10 @@ window.openSettingsModal = () => {
   openModal('modalSettings'); 
 };
 window.saveSettings = async () => {
-  const p = parseInt(document.getElementById('cfgPeople').value) || 1;
-  const c = parseFloat(document.getElementById('cfgCost').value) || 0;
-  const d = parseFloat(document.getElementById('cfgDaily').value) || 0;
-
+  const p = parseInt(document.getElementById('cfgPeople').value) || 1, c = parseFloat(document.getElementById('cfgCost').value) || 0, d = parseFloat(document.getElementById('cfgDaily').value) || 0;
   await updateDoc(doc(db, 'userProfiles', currentUser.uid), { numPeople: p, costPerPerson: c, dailyTarget: d });
   userProfile.numPeople = p; userProfile.costPerPerson = c; userProfile.dailyTarget = d;
-  closeModal('modalSettings'); loadUser(); showToast('Pengaturan berhasil disimpan');
+  closeModal('modalSettings'); loadUser(); showToast('Pembaruan parameter sukses');
 };
 
 async function loadAdmin() {
@@ -616,24 +594,24 @@ async function loadAdmin() {
   
   usrs.forEach(u => {
     const t = (u.numPeople||1)*(u.costPerPerson||0), s = u.totalSaved||0, pct = t>0 ? Math.min(100, s/t*100) : 0;
-    html += `<div class="log-item" style="padding:16px 0; display:block;">
-      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-        <span style="font-weight:600;">${u.displayName} (@${u.username})</span>
-        <span style="color:var(--text-dim); font-size:13px;">${fmtRp(s)} / ${fmtRp(t)}</span>
+    html += `<div class="log-item" style="padding:20px 0; display:block;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+        <span style="font-weight:600; color:var(--text-main);">${u.displayName} (@${u.username})</span>
+        <span style="color:var(--brand-primary); font-size:14px; font-weight:600;">${fmtRp(s)} <span style="color:var(--text-dim); font-weight:400;">/ ${fmtRp(t)}</span></span>
       </div>
-      <div style="background:var(--border-light); height:6px; border-radius:4px; overflow:hidden;"><div style="background:var(--accent); width:${pct}%; height:100%;"></div></div>
+      <div style="background:var(--border-light); height:8px; border-radius:4px; overflow:hidden;"><div style="background:var(--brand-primary); width:${pct}%; height:100%; border-radius:4px;"></div></div>
     </div>`;
   });
-  document.getElementById('admUserList').innerHTML = html || '<div style="padding:16px 0; color:var(--text-dim); font-size:13px;">Belum ada pengguna</div>';
+  document.getElementById('admUserList').innerHTML = html || '<div style="padding:16px 0; color:var(--text-dim); font-size:13px; text-align:center;">Data klien belum tersedia</div>';
 }
 
 window.registerClient = async () => {
   const nm = document.getElementById('regName').value, ur = document.getElementById('regUser').value, pw = document.getElementById('regPass').value, pp = parseInt(document.getElementById('regPeople').value)||1, cs = parseFloat(document.getElementById('regCost').value)||0;
-  if(!nm || !ur || !pw) return showToast('Harap isi semua data', 'alert');
+  if(!nm || !ur || !pw) return showToast('Validasi ditolak: Formulir tidak lengkap', 'alert');
   const c = await getDocs(query(collection(db, 'userProfiles'), where('username','==',ur)));
-  if(!c.empty) return showToast('Username sudah dipakai orang lain', 'alert');
+  if(!c.empty) return showToast('Identitas tersebut sudah terdaftar', 'alert');
   await addDoc(collection(db, 'userProfiles'), { displayName: nm, username: ur, password: pw, role: 'user', numPeople: pp, costPerPerson: cs, totalSaved: 0, dailyTarget: 0, startDate: serverTimestamp() });
-  closeModal('modalAddUser'); showToast('Akun berhasil dibuat'); loadAdmin();
+  closeModal('modalAddUser'); showToast('Entitas berhasil diregistrasi'); loadAdmin();
 };
 </script>
 </body>
