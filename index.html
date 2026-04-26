@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Portal Tabungan Umroh</title>
+  <title>Aplikasi Tabungan Umroh</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -39,6 +39,8 @@
     .btn-secondary:hover { background: #e2e8f0; }
     .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border-light); }
     .btn-ghost:hover { background: var(--bg-base); color: var(--text-main); }
+    .btn-danger { background: #fef2f2; color: var(--alert); border: 1px solid #fecaca; padding: 6px 10px; font-size: 12px; }
+    .btn-danger:hover { background: #fee2e2; }
 
     .card { background: var(--bg-panel); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border-light); padding: 24px; margin-bottom: 24px; }
     .card-header { font-size: 16px; font-weight: 600; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border-light); color: var(--text-main); }
@@ -59,11 +61,17 @@
 
     .chart-box { height: 320px; width: 100%; position: relative; }
     
-    .log-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-light); }
+    .log-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-light); }
     .log-item:last-child { border-bottom: none; }
     .log-title { font-size: 14px; font-weight: 500; }
     .log-date { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
     .log-amt { font-size: 14px; font-weight: 600; color: var(--success); }
+
+    /* Expandable History */
+    .history-hidden { display: none; }
+    .history-visible { display: block; }
+    .toggle-btn { width: 100%; text-align: center; background: #f8fafc; border: 1px dashed var(--border-light); padding: 10px; margin-top: 10px; color: var(--text-dim); cursor: pointer; font-size: 13px; border-radius: var(--radius); }
+    .toggle-btn:hover { background: #f1f5f9; color: var(--text-main); }
 
     .simulation-panel { background: #f8fafc; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-light); margin-top: 16px; }
     .simulation-result { margin-top: 16px; padding: 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius); font-size: 14px; color: #1e3a8a; line-height: 1.5; }
@@ -89,45 +97,45 @@
 <div id="loginScreen" class="screen active">
   <div class="login-wrapper">
     <div class="login-box">
-      <h1 style="font-size: 20px; text-align: center; margin-bottom: 24px;">Autentikasi Sistem</h1>
+      <h1 style="font-size: 20px; text-align: center; margin-bottom: 24px;">Aplikasi Tabungan Umroh</h1>
       <div class="form-group">
-        <label>ID Pengguna</label>
+        <label>Username</label>
         <input type="text" id="loginUsername" placeholder="Masukkan username" autocomplete="off">
       </div>
       <div class="form-group">
         <label>Kata Sandi</label>
         <input type="password" id="loginPassword" placeholder="••••••••">
       </div>
-      <button class="btn-primary" style="width: 100%; margin-top: 8px;" onclick="handleLogin()" id="loginBtn">Otorisasi Akses</button>
+      <button class="btn-primary" style="width: 100%; margin-top: 8px;" onclick="handleLogin()" id="loginBtn">Masuk</button>
     </div>
   </div>
 </div>
 
 <div id="userScreen" class="screen">
   <nav>
-    <div class="brand">Portal Finansial Umroh</div>
+    <div class="brand">TabungUmroh</div>
     <div style="display: flex; gap: 16px; align-items: center;">
       <span id="userNavName" style="font-size: 14px; font-weight: 500;"></span>
-      <button class="btn-ghost" onclick="handleLogout()">Keluar Sesi</button>
+      <button class="btn-ghost" onclick="handleLogout()">Keluar</button>
     </div>
   </nav>
 
   <div class="container">
     <div class="grid-kpi">
       <div class="kpi-box">
-        <div class="kpi-label">Akumulasi Dana</div>
+        <div class="kpi-label">Total Tabungan</div>
         <div class="kpi-val" style="color: var(--accent);" id="uiTotalSaved">Rp 0</div>
-        <div class="kpi-sub" id="uiProgressText">0% dari estimasi kebutuhan</div>
+        <div class="kpi-sub" id="uiProgressText">0% dari target</div>
       </div>
       <div class="kpi-box">
-        <div class="kpi-label">Proyeksi Kebutuhan</div>
+        <div class="kpi-label">Target Keseluruhan</div>
         <div class="kpi-val" id="uiTotalTarget">Rp 0</div>
-        <div class="kpi-sub" id="uiPeopleCount">Alokasi 1 entitas</div>
+        <div class="kpi-sub" id="uiPeopleCount">Untuk 1 orang</div>
       </div>
       <div class="kpi-box">
-        <div class="kpi-label">Defisit Target</div>
+        <div class="kpi-label">Sisa Kekurangan</div>
         <div class="kpi-val" id="uiRemaining">Rp 0</div>
-        <div class="kpi-sub" id="uiEstDate">Kalkulasi tanggal...</div>
+        <div class="kpi-sub" id="uiEstDate">Menghitung...</div>
       </div>
     </div>
 
@@ -135,30 +143,31 @@
       
       <div>
         <div class="card">
-          <div class="card-header">Lintasan Pertumbuhan Aset</div>
+          <div class="card-header">Grafik Pertumbuhan Tabungan</div>
           <div class="chart-box">
             <canvas id="mainChart"></canvas>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-header" style="margin-bottom: 12px;">Analisis & Simulasi Ketercapaian</div>
+          <div class="card-header" style="margin-bottom: 12px;">Analisis & Simulasi Tabungan</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div class="kpi-box" style="margin: 0; padding: 12px;">
-              <div class="kpi-label">Aktual Rata-Rata / Hari</div>
+              <div class="kpi-label">Rata-rata Menabung / Hari</div>
               <div class="kpi-val" style="font-size: 18px;" id="statActualDaily">Rp 0</div>
             </div>
             <div class="kpi-box" style="margin: 0; padding: 12px;">
-              <div class="kpi-label">Aktual Rata-Rata / Bulan</div>
+              <div class="kpi-label">Rata-rata Menabung / Bulan</div>
               <div class="kpi-val" style="font-size: 18px;" id="statActualMonthly">Rp 0</div>
             </div>
           </div>
           
           <div class="simulation-panel">
-            <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main);">Kalkulator Proyeksi Linier</h4>
+            <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main);">Simulasi Tabungan Tetap</h4>
+            <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 10px;">Jika saya konsisten menabung sebesar:</p>
             <div style="display: flex; gap: 12px;">
               <div style="flex: 2;">
-                <input type="number" id="simAmount" placeholder="Nominal Simulasi (Rp)" oninput="runSimulation()">
+                <input type="number" id="simAmount" placeholder="Nominal (Rp)" oninput="runSimulation()">
               </div>
               <div style="flex: 1;">
                 <select id="simPeriod" onchange="runSimulation()">
@@ -168,7 +177,7 @@
               </div>
             </div>
             <div class="simulation-result" id="simResult">
-              Kalkulasi akan ditampilkan setelah input nominal.
+              Ketikkan angka di atas untuk melihat kapan tabungan Anda akan lunas.
             </div>
           </div>
         </div>
@@ -176,10 +185,10 @@
 
       <div>
         <div class="card" style="border: 1px solid var(--accent);">
-          <div class="card-header" style="color: var(--accent);">Aksi Cepat Transaksi</div>
+          <div class="card-header" style="color: var(--accent);">Catat Transaksi Cepat</div>
           
           <div class="form-group">
-            <label>Pilih Tanggal Transaksi</label>
+            <label>Tanggal Setoran</label>
             <input type="date" id="inputDate">
           </div>
           
@@ -194,20 +203,21 @@
           </div>
 
           <div style="border-top: 1px solid var(--border-light); margin-top: 16px; padding-top: 16px;">
-            <label style="font-size: 12px;">Atau nominal lain (Rp)</label>
+            <label style="font-size: 12px;">Atau nominal khusus (Rp)</label>
             <div style="display: flex; gap: 8px;">
-              <input type="number" id="inputAmtCustom" placeholder="Cth: 250000" style="flex: 2;">
-              <button class="btn-ghost" style="flex: 1;" onclick="submitCustomAmount()">Bukukan</button>
+              <input type="number" id="inputAmtCustom" placeholder="Misal: 250000" style="flex: 2;">
+              <button class="btn-ghost" style="flex: 1;" onclick="submitCustomAmount()">Simpan</button>
             </div>
           </div>
         </div>
 
         <div class="card">
           <div class="card-header" style="display: flex; justify-content: space-between;">
-            <span>Buku Besar Ekstrak</span>
-            <span style="font-size: 12px; font-weight: 400; cursor: pointer; color: var(--accent);" onclick="openSettingsModal()">Konfigurasi Aset</span>
+            <span>Riwayat Tabungan</span>
+            <span style="font-size: 12px; font-weight: 400; cursor: pointer; color: var(--accent);" onclick="openSettingsModal()">Pengaturan Target</span>
           </div>
-          <div id="historyList"></div>
+          <div id="historyListContainer">
+            </div>
         </div>
       </div>
     </div>
@@ -216,24 +226,24 @@
 
 <div id="adminScreen" class="screen">
   <nav>
-    <div class="brand">Konsol Administrator</div>
-    <button class="btn-ghost" onclick="handleLogout()">Tutup Sesi</button>
+    <div class="brand">Dashboard Admin</div>
+    <button class="btn-ghost" onclick="handleLogout()">Keluar</button>
   </nav>
   <div class="container">
     <div class="grid-kpi">
       <div class="kpi-box">
-        <div class="kpi-label">Total Klien Aktif</div>
+        <div class="kpi-label">Total Pengguna</div>
         <div class="kpi-val" id="admUsers">0</div>
       </div>
       <div class="kpi-box">
-        <div class="kpi-label">Aset Dikelola</div>
+        <div class="kpi-label">Total Dana Terkumpul</div>
         <div class="kpi-val" id="admAssets">Rp 0</div>
       </div>
     </div>
     <div class="card">
       <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <span>Direktori Klien</span>
-        <button class="btn-primary" onclick="openModal('modalAddUser')">Registrasi Klien Baru</button>
+        <span>Daftar Pengguna</span>
+        <button class="btn-primary" onclick="openModal('modalAddUser')">Tambah Pengguna Baru</button>
       </div>
       <div id="admUserList"></div>
     </div>
@@ -243,37 +253,37 @@
 <div id="modalSettings" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-head">
-      <span>Parameter Terencana</span>
+      <span>Pengaturan Target Tabungan</span>
       <span style="cursor: pointer; color: var(--text-dim);" onclick="closeModal('modalSettings')">✕</span>
     </div>
-    <div class="form-group"><label>Kuantitas Personel</label><input type="number" id="cfgPeople"></div>
-    <div class="form-group"><label>Alokasi per Personel (Rp)</label><input type="number" id="cfgCost"></div>
+    <div class="form-group"><label>Jumlah Orang yang Berangkat</label><input type="number" id="cfgPeople"></div>
+    <div class="form-group"><label>Biaya per Orang (Rp)</label><input type="number" id="cfgCost"></div>
     <div class="form-group"><label>Target Tabungan Harian (Rp)</label><input type="number" id="cfgDaily" placeholder="Cth: 50000"></div>
-    <button class="btn-primary" style="width: 100%; margin-top: 16px;" onclick="saveSettings()">Terapkan Parameter</button>
+    <button class="btn-primary" style="width: 100%; margin-top: 16px;" onclick="saveSettings()">Simpan Pengaturan</button>
   </div>
 </div>
 
 <div id="modalAddUser" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-head">
-      <span>Pendaftaran Klien</span>
+      <span>Pendaftaran Pengguna Baru</span>
       <span style="cursor: pointer; color: var(--text-dim);" onclick="closeModal('modalAddUser')">✕</span>
     </div>
     <div class="form-group"><label>Nama Lengkap</label><input type="text" id="regName"></div>
-    <div class="form-group"><label>Identitas Akses (Username)</label><input type="text" id="regUser"></div>
-    <div class="form-group"><label>Kunci Akses Default</label><input type="password" id="regPass"></div>
+    <div class="form-group"><label>Username (Untuk Login)</label><input type="text" id="regUser"></div>
+    <div class="form-group"><label>Kata Sandi Default</label><input type="password" id="regPass"></div>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-      <div class="form-group"><label>Kuantitas</label><input type="number" id="regPeople" value="1"></div>
-      <div class="form-group"><label>Biaya Satuan (Rp)</label><input type="number" id="regCost"></div>
+      <div class="form-group"><label>Jumlah Orang</label><input type="number" id="regPeople" value="1"></div>
+      <div class="form-group"><label>Biaya per Orang (Rp)</label><input type="number" id="regCost"></div>
     </div>
-    <button class="btn-primary" style="width: 100%; margin-top: 16px;" onclick="registerClient()">Proses Registrasi</button>
+    <button class="btn-primary" style="width: 100%; margin-top: 16px;" onclick="registerClient()">Buat Akun</button>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, getDocs, collection, addDoc, query, orderBy, limit, where, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, getDocs, collection, addDoc, deleteDoc, query, orderBy, limit, where, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const firebaseConfig = { apiKey: "AIzaSyA5yOuh_8MFzY72mx1YDzBhnRBaHo9ao-A", authDomain: "niat-umroh.firebaseapp.com", projectId: "niat-umroh", storageBucket: "niat-umroh.firebasestorage.app", messagingSenderId: "1019791626861", appId: "1:1019791626861:web:16cbfb4311e0cef1282564" };
 const app = initializeApp(firebaseConfig);
@@ -281,8 +291,9 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null, userProfile = null, globalEntries = [], chartInst = null;
+let showingAllHistory = false;
 
-// Utility Formatting Angka Desimal Indonesia
+// Format Rupiah Indonesia (menggunakan pemisah titik)
 const fmtRp = n => n == null ? '-' : 'Rp ' + Math.round(n).toLocaleString('id-ID');
 const fmtDt = ts => ts ? (ts.toDate ? ts.toDate() : new Date(ts)).toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric'}) : '-';
 
@@ -312,14 +323,14 @@ async function checkSession() {
 
 window.handleLogin = async () => {
   const u = document.getElementById('loginUsername').value.trim(), p = document.getElementById('loginPassword').value;
-  if (!u || !p) return showToast('Lengkapi mandat akses', 'alert');
+  if (!u || !p) return showToast('Harap isi username dan kata sandi', 'alert');
   document.getElementById('loginBtn').innerText = 'Memverifikasi...';
   try {
     const q = query(collection(db, 'userProfiles'), where('username', '==', u), where('password', '==', p));
     const snap = await getDocs(q);
-    if (!snap.empty) { localStorage.setItem('sid_umroh', snap.docs[0].id); await checkSession(); } else showToast('Kredensial tidak valid', 'alert');
-  } catch(e) { showToast('Koneksi terputus', 'alert'); }
-  document.getElementById('loginBtn').innerText = 'Otorisasi Akses';
+    if (!snap.empty) { localStorage.setItem('sid_umroh', snap.docs[0].id); await checkSession(); } else showToast('Username atau sandi salah', 'alert');
+  } catch(e) { showToast('Tidak ada koneksi ke server', 'alert'); }
+  document.getElementById('loginBtn').innerText = 'Masuk';
 };
 
 window.handleLogout = () => { localStorage.removeItem('sid_umroh'); currentUser = null; switchScreen('loginScreen'); };
@@ -327,40 +338,64 @@ window.handleLogout = () => { localStorage.removeItem('sid_umroh'); currentUser 
 async function loadUser() {
   const p = userProfile;
   document.getElementById('userNavName').textContent = p.displayName;
-  
-  // Set default Input Date ke Hari Ini
   document.getElementById('inputDate').valueAsDate = new Date();
   
-  // Tampilkan label target harian
   const dailyTgt = p.dailyTarget || 0;
-  document.getElementById('lblDailyTarget').textContent = dailyTgt > 0 ? fmtRp(dailyTgt) : 'Atur Target Dulu';
+  document.getElementById('lblDailyTarget').textContent = dailyTgt > 0 ? fmtRp(dailyTgt) : 'Atur Dulu';
 
   const tgt = (p.numPeople || 1) * (p.costPerPerson || 0), saved = p.totalSaved || 0, rem = Math.max(0, tgt - saved);
   
   document.getElementById('uiTotalSaved').textContent = fmtRp(saved);
   document.getElementById('uiTotalTarget').textContent = fmtRp(tgt);
   document.getElementById('uiRemaining').textContent = fmtRp(rem);
-  document.getElementById('uiProgressText').textContent = `${tgt > 0 ? (saved/tgt*100).toFixed(1) : 0}% terhimpun`;
-  document.getElementById('uiPeopleCount').textContent = `Alokasi untuk ${p.numPeople || 1} entitas`;
+  document.getElementById('uiProgressText').textContent = `${tgt > 0 ? (saved/tgt*100).toFixed(1) : 0}% terkumpul`;
+  document.getElementById('uiPeopleCount').textContent = `Untuk ${p.numPeople || 1} orang`;
 
   const q = query(collection(db, 'savingsEntries', currentUser.uid, 'logs'), orderBy('date', 'asc'));
   const snap = await getDocs(q);
-  globalEntries = []; snap.forEach(d => globalEntries.push(d.data()));
+  globalEntries = []; snap.forEach(d => globalEntries.push({ id: d.id, ...d.data() }));
   
   renderData(tgt, saved, rem);
   window.runSimulation();
 }
 
+// Render data untuk History (dengan fitur Expandable dan Hapus) dan Grafik Batang
 function renderData(target, saved, rem) {
-  const listEl = document.getElementById('historyList');
+  const listEl = document.getElementById('historyListContainer');
   if (!globalEntries.length) {
-    listEl.innerHTML = '<div style="font-size:13px; color:var(--text-dim); padding:12px 0;">Repositori kosong.</div>';
+    listEl.innerHTML = '<div style="font-size:13px; color:var(--text-dim); padding:12px 0;">Belum ada riwayat tabungan.</div>';
     document.getElementById('statActualDaily').textContent = 'Rp 0';
     document.getElementById('statActualMonthly').textContent = 'Rp 0';
-    document.getElementById('uiEstDate').textContent = 'Data insufisien';
+    document.getElementById('uiEstDate').textContent = 'Belum ada data';
   } else {
-    listEl.innerHTML = [...globalEntries].reverse().slice(0, 6).map(e => `<div class="log-item"><div><div class="log-title">${e.note || 'Transaksi Terdata'}</div><div class="log-date">${fmtDt(e.date)}</div></div><div class="log-amt">+ ${fmtRp(e.amount)}</div></div>`).join('');
+    // Generate History HTML
+    const reversed = [...globalEntries].reverse();
+    let historyHtml = '';
     
+    reversed.forEach((e, index) => {
+      const isHiddenClass = (index >= 3 && !showingAllHistory) ? 'history-hidden' : 'history-visible';
+      historyHtml += `
+        <div class="log-item ${isHiddenClass}" id="row-${e.id}">
+          <div>
+            <div class="log-title">${e.note || 'Tabungan'}</div>
+            <div class="log-date">${fmtDt(e.date)}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="log-amt">+ ${fmtRp(e.amount)}</div>
+            <button class="btn-danger" onclick="deleteTransaction('${e.id}', ${e.amount})">Hapus</button>
+          </div>
+        </div>
+      `;
+    });
+
+    if (reversed.length > 3) {
+      const btnText = showingAllHistory ? 'Sembunyikan Sebagian' : `Lihat Semua Riwayat (${reversed.length})`;
+      historyHtml += `<button class="toggle-btn" onclick="toggleHistory()">${btnText}</button>`;
+    }
+    
+    listEl.innerHTML = historyHtml;
+    
+    // Kalkulasi Rata-rata
     const startObj = userProfile.startDate;
     const startMs = startObj ? (startObj.toDate ? startObj.toDate().getTime() : new Date(startObj).getTime()) : new Date().getTime();
     const daysActive = Math.max(1, Math.floor((Date.now() - startMs) / 86400000));
@@ -371,65 +406,53 @@ function renderData(target, saved, rem) {
     document.getElementById('statActualDaily').textContent = fmtRp(avgDaily);
     document.getElementById('statActualMonthly').textContent = fmtRp(avgMonthly);
 
-    if (rem <= 0) document.getElementById('uiEstDate').textContent = 'Target terpenuhi';
+    if (rem <= 0) document.getElementById('uiEstDate').textContent = 'Lunas!';
     else if (avgDaily > 0) {
       const dLeft = Math.ceil(rem / avgDaily);
       const estD = new Date(Date.now() + dLeft * 86400000);
-      document.getElementById('uiEstDate').textContent = `Est. Aktual: ${fmtDt(estD)}`;
-    } else document.getElementById('uiEstDate').textContent = 'Membutuhkan konsistensi';
+      document.getElementById('uiEstDate').textContent = `Lunas pada: ${fmtDt(estD)}`;
+    } else document.getElementById('uiEstDate').textContent = 'Ayo mulai menabung!';
   }
 
-  // Peningkatan Kualitas Chart & Format Angka
+  // --- GRAFIK BATANG ---
   const ctx = document.getElementById('mainChart').getContext('2d');
   if (chartInst) chartInst.destroy();
   
-  // Create Gradient
-  let gradient = ctx.createLinearGradient(0, 0, 0, 320);
-  gradient.addColorStop(0, 'rgba(37, 99, 235, 0.4)');
-  gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
-
   let acc = 0; const lbls = [], pts = [];
   globalEntries.forEach(e => { acc += e.amount; lbls.push(fmtDt(e.date)); pts.push(acc); });
   if (!pts.length) { lbls.push(fmtDt(new Date())); pts.push(0); }
   
   chartInst = new Chart(ctx, {
-    type: 'line', 
+    type: 'bar', // Menggunakan diagram batang
     data: { 
       labels: lbls, 
       datasets: [
         { 
-          label: 'Realisasi Aset', 
+          label: 'Total Tabungan Terkumpul', 
           data: pts, 
-          borderColor: '#2563eb', 
-          backgroundColor: gradient, 
-          fill: true, 
-          tension: 0.4, // Kurva mulus
-          pointRadius: 0,
-          pointHoverRadius: 6,
-          borderWidth: 2
+          backgroundColor: 'rgba(37, 99, 235, 0.85)',
+          borderRadius: 4,
+          barPercentage: 0.7
         }, 
         { 
-          label: 'Garis Target Total', 
+          type: 'line', // Garis putus-putus untuk target
+          label: 'Target Tabungan', 
           data: Array(lbls.length).fill(target), 
           borderColor: '#94a3b8', 
           borderDash: [5,5], 
           pointRadius: 0,
-          borderWidth: 1.5
+          borderWidth: 2,
+          fill: false
         }
       ] 
     },
     options: { 
       responsive: true, 
       maintainAspectRatio: false, 
-      interaction: {
-        mode: 'index',
-        intersect: false,
-      },
+      interaction: { mode: 'index', intersect: false },
       plugins: { 
         legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
-        tooltip: {
-          callbacks: { label: (context) => 'Rp ' + context.parsed.y.toLocaleString('id-ID') }
-        }
+        tooltip: { callbacks: { label: (ctx) => 'Rp ' + ctx.parsed.y.toLocaleString('id-ID') } }
       }, 
       scales: { 
         y: { 
@@ -443,6 +466,32 @@ function renderData(target, saved, rem) {
   });
 }
 
+// Logika Buka/Tutup Riwayat
+window.toggleHistory = () => {
+  showingAllHistory = !showingAllHistory;
+  loadUser(); // Refresh UI untuk merender ulang tabel
+};
+
+// Logika Hapus Transaksi (Reset)
+window.deleteTransaction = async (docId, amount) => {
+  if(!confirm('Anda yakin ingin membatalkan setoran ini?')) return;
+  
+  try {
+    const newTotal = Math.max(0, (userProfile.totalSaved || 0) - amount);
+    
+    // Hapus dari Firestore
+    await deleteDoc(doc(db, 'savingsEntries', currentUser.uid, 'logs', docId));
+    // Update Total Saved di Profil
+    await updateDoc(doc(db, 'userProfiles', currentUser.uid), { totalSaved: newTotal });
+    
+    userProfile.totalSaved = newTotal;
+    showToast('Setoran berhasil dibatalkan', 'success');
+    loadUser(); // Reload data
+  } catch(e) {
+    showToast('Gagal membatalkan setoran', 'alert');
+  }
+};
+
 window.runSimulation = () => {
   const amt = parseFloat(document.getElementById('simAmount').value);
   const period = document.getElementById('simPeriod').value;
@@ -451,8 +500,8 @@ window.runSimulation = () => {
   const saved = userProfile.totalSaved || 0;
   const rem = Math.max(0, tgt - saved);
 
-  if (rem <= 0) { resEl.innerHTML = "Aset telah memenuhi target operasional."; return; }
-  if (!amt || amt <= 0) { resEl.innerHTML = "Menunggu input parameter untuk melakukan proyeksi."; return; }
+  if (rem <= 0) { resEl.innerHTML = "Selamat! Tabungan Anda sudah lunas."; return; }
+  if (!amt || amt <= 0) { resEl.innerHTML = "Ketikkan angka nominal di atas untuk melihat perhitungan."; return; }
 
   const dailyInput = period === 'monthly' ? amt / 30 : amt;
   const daysLeft = Math.ceil(rem / dailyInput);
@@ -460,40 +509,38 @@ window.runSimulation = () => {
   
   let timeStr = period === 'monthly' ? `${(daysLeft/30).toFixed(1)} bulan` : `${daysLeft} hari`;
   
-  resEl.innerHTML = `Dengan konstan menyetor <b>${fmtRp(amt)}</b> per ${period === 'monthly' ? 'bulan' : 'hari'}, defisit aset akan tertutup dalam kurun waktu <b>${timeStr}</b>. <br><br>Estimasi ketercapaian: <b>${fmtDt(estDate)}</b>.`;
+  resEl.innerHTML = `Jika Anda rutin menyetor <b>${fmtRp(amt)}</b> per ${period === 'monthly' ? 'bulan' : 'hari'}, kekurangan tabungan akan lunas dalam <b>${timeStr}</b>. <br><br>Target lunas: <b>${fmtDt(estDate)}</b>.`;
 };
 
-// Logika Pencatatan Terpusat
 window.submitDailySavings = async () => {
   const dateVal = document.getElementById('inputDate').value;
-  if(!dateVal) return showToast('Pilih tanggal transaksi', 'alert');
+  if(!dateVal) return showToast('Pilih tanggal dulu', 'alert');
   
   const dailyAmt = parseFloat(userProfile.dailyTarget) || 0;
-  if(dailyAmt <= 0) return showToast('Harap atur Target Harian terlebih dahulu', 'alert');
+  if(dailyAmt <= 0) return showToast('Atur Target Tabungan Harian dulu di menu Pengaturan', 'alert');
   
   await executeTransaction(dailyAmt, 'Setoran Reguler', new Date(dateVal));
 };
 
 window.submitQuickAmount = async (amt) => {
   const dateVal = document.getElementById('inputDate').value;
-  if(!dateVal) return showToast('Pilih tanggal transaksi', 'alert');
-  await executeTransaction(amt, 'Setoran Ekstra Cepat', new Date(dateVal));
+  if(!dateVal) return showToast('Pilih tanggal dulu', 'alert');
+  await executeTransaction(amt, 'Setoran Tambahan', new Date(dateVal));
 };
 
 window.submitCustomAmount = async () => {
   const amt = parseFloat(document.getElementById('inputAmtCustom').value);
-  if(!amt || amt <= 0) return showToast('Nominal tidak valid', 'alert');
+  if(!amt || amt <= 0) return showToast('Nominal salah', 'alert');
   
   const dateVal = document.getElementById('inputDate').value;
-  if(!dateVal) return showToast('Pilih tanggal transaksi', 'alert');
+  if(!dateVal) return showToast('Pilih tanggal dulu', 'alert');
   
-  await executeTransaction(amt, 'Setoran Kustom', new Date(dateVal));
+  await executeTransaction(amt, 'Setoran Khusus', new Date(dateVal));
 };
 
 async function executeTransaction(amount, note, dateObj) {
   try {
     const nt = (userProfile.totalSaved || 0) + amount;
-    // Set jam transaksi ke waktu saat ini agar sorting berurutan meskipun di hari yang sama
     const now = new Date();
     dateObj.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
 
@@ -502,12 +549,11 @@ async function executeTransaction(amount, note, dateObj) {
     
     userProfile.totalSaved = nt; 
     document.getElementById('inputAmtCustom').value = ''; 
-    showToast('Transaksi berhasil dibukukan'); 
+    showToast('Transaksi berhasil disimpan!'); 
     loadUser();
-  } catch(e) { showToast('Kegagalan sistem pencatatan', 'alert'); }
+  } catch(e) { showToast('Gagal menyimpan transaksi', 'alert'); }
 }
 
-// Konfigurasi Parameter (Modal)
 window.openSettingsModal = () => { 
   document.getElementById('cfgPeople').value = userProfile.numPeople || 1; 
   document.getElementById('cfgCost').value = userProfile.costPerPerson || 0; 
@@ -521,7 +567,7 @@ window.saveSettings = async () => {
 
   await updateDoc(doc(db, 'userProfiles', currentUser.uid), { numPeople: p, costPerPerson: c, dailyTarget: d });
   userProfile.numPeople = p; userProfile.costPerPerson = c; userProfile.dailyTarget = d;
-  closeModal('modalSettings'); loadUser(); showToast('Konfigurasi tersinkronisasi');
+  closeModal('modalSettings'); loadUser(); showToast('Pengaturan berhasil disimpan');
 };
 
 async function loadAdmin() {
@@ -540,16 +586,16 @@ async function loadAdmin() {
       <div style="background:var(--border-light); height:6px; border-radius:4px; overflow:hidden;"><div style="background:var(--accent); width:${pct}%; height:100%;"></div></div>
     </div>`;
   });
-  document.getElementById('admUserList').innerHTML = html || '<div style="padding:16px 0; color:var(--text-dim); font-size:13px;">Direktori kosong</div>';
+  document.getElementById('admUserList').innerHTML = html || '<div style="padding:16px 0; color:var(--text-dim); font-size:13px;">Belum ada pengguna</div>';
 }
 
 window.registerClient = async () => {
   const nm = document.getElementById('regName').value, ur = document.getElementById('regUser').value, pw = document.getElementById('regPass').value, pp = parseInt(document.getElementById('regPeople').value)||1, cs = parseFloat(document.getElementById('regCost').value)||0;
-  if(!nm || !ur || !pw) return showToast('Data krusial tidak lengkap', 'alert');
+  if(!nm || !ur || !pw) return showToast('Harap isi semua data', 'alert');
   const c = await getDocs(query(collection(db, 'userProfiles'), where('username','==',ur)));
-  if(!c.empty) return showToast('Identitas akses duplikat', 'alert');
+  if(!c.empty) return showToast('Username sudah dipakai orang lain', 'alert');
   await addDoc(collection(db, 'userProfiles'), { displayName: nm, username: ur, password: pw, role: 'user', numPeople: pp, costPerPerson: cs, totalSaved: 0, dailyTarget: 0, startDate: serverTimestamp() });
-  closeModal('modalAddUser'); showToast('Klien terdaftar'); loadAdmin();
+  closeModal('modalAddUser'); showToast('Akun berhasil dibuat'); loadAdmin();
 };
 </script>
 </body>
