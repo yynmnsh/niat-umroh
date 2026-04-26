@@ -76,7 +76,7 @@
 
     /* Fix Horizontal Scroll on Mobile */
     .grid-layout { display: grid; grid-template-columns: 1fr; gap: 24px; }
-    .grid-layout > div { min-width: 0; /* Mencegah elemen grid meluber */ }
+    .grid-layout > div { min-width: 0; }
     @media (min-width: 1024px) { .grid-layout { grid-template-columns: 1.8fr 1.2fr; } }
 
     /* Forms */
@@ -93,7 +93,7 @@
     .log-item:last-child { border-bottom: none; }
     .log-title { font-size: 15px; font-weight: 600; color: var(--text-main); }
     .log-date { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
-    .log-amt { font-size: 15px; font-weight: 700; color: var(--success); background: #dcfce7; padding: 6px 12px; border-radius: 20px; }
+    .log-amt { font-size: 15px; font-weight: 700; background: #f3f4f6; padding: 6px 12px; border-radius: 20px; }
 
     .history-hidden { display: none; }
     .history-visible { display: flex; }
@@ -246,7 +246,7 @@
         <div class="card">
           <div class="card-header">
             <span>Riwayat Transaksi</span>
-            <button class="btn-ghost" style="font-size: 12px; padding: 6px 10px;" onclick="openSettingsModal()">Atur Target</button>
+            <button class="btn-ghost" style="font-size: 12px; padding: 6px 10px;" onclick="openSettingsModal()">Pengaturan Tabungan & Saldo</button>
           </div>
           <div id="historyListContainer">
             </div>
@@ -285,12 +285,26 @@
 <div id="modalSettings" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-head">
-      <span>Parameter Target Keuangan</span>
+      <span>Pengaturan Tabungan & Saldo</span>
       <span style="cursor: pointer; color: var(--text-dim); padding: 4px;" onclick="closeModal('modalSettings')">✕</span>
     </div>
-    <div class="form-group"><label>Jumlah Orang Keberangkatan</label><input type="number" id="cfgPeople"></div>
-    <div class="form-group"><label>Biaya Estimasi per Orang (Rp)</label><input type="number" id="cfgCost"></div>
-    <div class="form-group"><label>Komitmen Tabungan Harian (Rp)</label><input type="number" id="cfgDaily" placeholder="Cth: 50000"></div>
+    <div class="form-group">
+      <label>Total Orang Keberangkatan</label>
+      <input type="number" id="cfgPeople">
+    </div>
+    <div class="form-group">
+      <label>Biaya Estimasi per Orang (Rp)</label>
+      <input type="number" id="cfgCost">
+    </div>
+    <div class="form-group">
+      <label style="color: var(--brand-primary);">Total Dana Tersimpan Saat Ini (Rp)</label>
+      <input type="number" id="cfgSaved" placeholder="Cth: 15000000" style="border-color: var(--brand-primary); background: #f0fdf4;">
+      <p style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">*Ubah nominal ini untuk mengoreksi total tabungan (Sisa Kebutuhan otomatis menyesuaikan).</p>
+    </div>
+    <div class="form-group">
+      <label>Komitmen Tabungan Harian (Rp)</label>
+      <input type="number" id="cfgDaily" placeholder="Cth: 50000">
+    </div>
     <button class="btn-primary" style="width: 100%; margin-top: 16px; padding: 14px;" onclick="saveSettings()">Simpan Konfigurasi</button>
   </div>
 </div>
@@ -326,7 +340,7 @@ let currentUser = null, userProfile = null, globalEntries = [], simChartInst = n
 let showingAllHistory = false;
 
 // Format Angka Desimal Indonesia
-const fmtRp = n => n == null ? '-' : 'Rp ' + Math.round(n).toLocaleString('id-ID');
+const fmtRp = n => n == null ? '-' : 'Rp ' + Math.abs(Math.round(n)).toLocaleString('id-ID');
 const fmtDt = ts => ts ? (ts.toDate ? ts.toDate() : new Date(ts)).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'}) : '-';
 
 window.showToast = (msg, type='') => { 
@@ -404,6 +418,12 @@ function renderData(target, saved, rem) {
     
     reversed.forEach((e, index) => {
       const isHiddenClass = (index >= 3 && !showingAllHistory) ? 'history-hidden' : 'history-visible';
+      
+      const isNegative = e.amount < 0;
+      const amountColor = isNegative ? 'var(--alert)' : 'var(--success)';
+      const amountSign = isNegative ? '-' : '+';
+      const bgAmount = isNegative ? '#fee2e2' : '#dcfce7';
+      
       historyHtml += `
         <div class="log-item ${isHiddenClass}" id="row-${e.id}">
           <div>
@@ -411,7 +431,7 @@ function renderData(target, saved, rem) {
             <div class="log-date">${fmtDt(e.date)}</div>
           </div>
           <div style="display:flex; align-items:center; gap:16px;">
-            <div class="log-amt">+ ${fmtRp(e.amount)}</div>
+            <div class="log-amt" style="color: ${amountColor}; background: ${bgAmount};">${amountSign} ${fmtRp(e.amount)}</div>
             <button class="btn-danger" onclick="deleteTransaction('${e.id}', ${e.amount})">Hapus</button>
           </div>
         </div>
@@ -577,13 +597,47 @@ window.openSettingsModal = () => {
   document.getElementById('cfgPeople').value = userProfile.numPeople || 1; 
   document.getElementById('cfgCost').value = userProfile.costPerPerson || 0; 
   document.getElementById('cfgDaily').value = userProfile.dailyTarget || 0;
+  document.getElementById('cfgSaved').value = userProfile.totalSaved || 0;
   openModal('modalSettings'); 
 };
+
 window.saveSettings = async () => {
-  const p = parseInt(document.getElementById('cfgPeople').value) || 1, c = parseFloat(document.getElementById('cfgCost').value) || 0, d = parseFloat(document.getElementById('cfgDaily').value) || 0;
-  await updateDoc(doc(db, 'userProfiles', currentUser.uid), { numPeople: p, costPerPerson: c, dailyTarget: d });
-  userProfile.numPeople = p; userProfile.costPerPerson = c; userProfile.dailyTarget = d;
-  closeModal('modalSettings'); loadUser(); showToast('Pembaruan parameter sukses');
+  const p = parseInt(document.getElementById('cfgPeople').value) || 1;
+  const c = parseFloat(document.getElementById('cfgCost').value) || 0;
+  const d = parseFloat(document.getElementById('cfgDaily').value) || 0;
+  const newSaved = parseFloat(document.getElementById('cfgSaved').value) || 0;
+
+  const oldSaved = userProfile.totalSaved || 0;
+  const diff = newSaved - oldSaved;
+
+  try {
+    // Jika ada perubahan saldo manual, catat sebagai transaksi "Penyesuaian Saldo"
+    if (diff !== 0) {
+      await addDoc(collection(db, 'savingsEntries', currentUser.uid, 'logs'), { 
+        amount: diff, 
+        note: 'Penyesuaian Saldo Manual', 
+        date: new Date() 
+      });
+    }
+
+    await updateDoc(doc(db, 'userProfiles', currentUser.uid), { 
+      numPeople: p, 
+      costPerPerson: c, 
+      dailyTarget: d,
+      totalSaved: newSaved
+    });
+
+    userProfile.numPeople = p; 
+    userProfile.costPerPerson = c; 
+    userProfile.dailyTarget = d;
+    userProfile.totalSaved = newSaved;
+    
+    closeModal('modalSettings'); 
+    loadUser(); 
+    showToast('Pembaruan parameter sukses');
+  } catch(e) {
+    showToast('Gagal menyimpan pengaturan', 'alert');
+  }
 };
 
 async function loadAdmin() {
