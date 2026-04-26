@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
-      --bg-base: #f1f5f9;
+      --bg-base: #f8fafc;
       --bg-panel: #ffffff;
       --text-main: #0f172a;
       --text-dim: #64748b;
@@ -35,6 +35,8 @@
     button { cursor: pointer; border: none; border-radius: var(--radius); font-weight: 500; padding: 10px 16px; transition: 0.2s; font-size: 14px; }
     .btn-primary { background: var(--accent); color: white; }
     .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border-light); }
+    .btn-secondary:hover { background: #e2e8f0; }
     .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border-light); }
     .btn-ghost:hover { background: var(--bg-base); color: var(--text-main); }
 
@@ -55,7 +57,7 @@
     input, select { width: 100%; padding: 10px 14px; border: 1px solid var(--border-light); border-radius: var(--radius); font-size: 14px; outline: none; transition: border-color 0.2s; }
     input:focus, select:focus { border-color: var(--accent); }
 
-    .chart-box { height: 320px; width: 100%; }
+    .chart-box { height: 320px; width: 100%; position: relative; }
     
     .log-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-light); }
     .log-item:last-child { border-bottom: none; }
@@ -77,6 +79,7 @@
 
     #toast { position: fixed; bottom: 20px; left: 50%; transform: translate(-50%, 100px); background: var(--text-main); color: white; padding: 12px 24px; border-radius: var(--radius); font-size: 14px; transition: 0.3s; z-index: 100; box-shadow: var(--shadow); }
     #toast.show { transform: translate(-50%, 0); }
+    #toast.alert { background: var(--alert); }
   </style>
 </head>
 <body>
@@ -89,7 +92,7 @@
       <h1 style="font-size: 20px; text-align: center; margin-bottom: 24px;">Autentikasi Sistem</h1>
       <div class="form-group">
         <label>ID Pengguna</label>
-        <input type="text" id="loginUsername" placeholder="Masukkan username">
+        <input type="text" id="loginUsername" placeholder="Masukkan username" autocomplete="off">
       </div>
       <div class="form-group">
         <label>Kata Sandi</label>
@@ -129,14 +132,17 @@
     </div>
 
     <div class="grid-layout">
+      
       <div>
         <div class="card">
           <div class="card-header">Lintasan Pertumbuhan Aset</div>
-          <div class="chart-box"><canvas id="mainChart"></canvas></div>
+          <div class="chart-box">
+            <canvas id="mainChart"></canvas>
+          </div>
         </div>
 
         <div class="card">
-          <div class="card-header" style="margin-bottom: 12px;">Analisis & Simulasi Tabungan</div>
+          <div class="card-header" style="margin-bottom: 12px;">Analisis & Simulasi Ketercapaian</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
             <div class="kpi-box" style="margin: 0; padding: 12px;">
               <div class="kpi-label">Aktual Rata-Rata / Hari</div>
@@ -149,7 +155,7 @@
           </div>
           
           <div class="simulation-panel">
-            <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main);">Kalkulator Proyeksi Tetap</h4>
+            <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main);">Kalkulator Proyeksi Linier</h4>
             <div style="display: flex; gap: 12px;">
               <div style="flex: 2;">
                 <input type="number" id="simAmount" placeholder="Nominal Simulasi (Rp)" oninput="runSimulation()">
@@ -162,30 +168,44 @@
               </div>
             </div>
             <div class="simulation-result" id="simResult">
-              Masukkan nominal untuk melihat proyeksi penyelesaian target umroh Anda.
+              Kalkulasi akan ditampilkan setelah input nominal.
             </div>
           </div>
         </div>
       </div>
 
       <div>
-        <div class="card">
-          <div class="card-header">Pencatatan Transaksi</div>
+        <div class="card" style="border: 1px solid var(--accent);">
+          <div class="card-header" style="color: var(--accent);">Aksi Cepat Transaksi</div>
+          
           <div class="form-group">
-            <label>Besaran Setoran (Rp)</label>
-            <input type="number" id="inputAmt" placeholder="0">
+            <label>Pilih Tanggal Transaksi</label>
+            <input type="date" id="inputDate">
           </div>
-          <div class="form-group">
-            <label>Referensi / Catatan</label>
-            <input type="text" id="inputNote" placeholder="Opsional">
+          
+          <button class="btn-primary" style="width: 100%; margin-bottom: 12px; font-size: 15px; padding: 12px;" onclick="submitDailySavings()">
+            Setor Tabungan Harian (<span id="lblDailyTarget">Rp 0</span>)
+          </button>
+          
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <button class="btn-secondary" style="flex: 1;" onclick="submitQuickAmount(50000)">+ 50.000</button>
+            <button class="btn-secondary" style="flex: 1;" onclick="submitQuickAmount(100000)">+ 100.000</button>
+            <button class="btn-secondary" style="flex: 1;" onclick="submitQuickAmount(500000)">+ 500.000</button>
           </div>
-          <button class="btn-primary" style="width: 100%;" onclick="submitSavings()">Bukukan Transaksi</button>
+
+          <div style="border-top: 1px solid var(--border-light); margin-top: 16px; padding-top: 16px;">
+            <label style="font-size: 12px;">Atau nominal lain (Rp)</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="number" id="inputAmtCustom" placeholder="Cth: 250000" style="flex: 2;">
+              <button class="btn-ghost" style="flex: 1;" onclick="submitCustomAmount()">Bukukan</button>
+            </div>
+          </div>
         </div>
 
         <div class="card">
           <div class="card-header" style="display: flex; justify-content: space-between;">
             <span>Buku Besar Ekstrak</span>
-            <span style="font-size: 12px; font-weight: 400; cursor: pointer; color: var(--accent);" onclick="openSettingsModal()">Konfigurasi Target</span>
+            <span style="font-size: 12px; font-weight: 400; cursor: pointer; color: var(--accent);" onclick="openSettingsModal()">Konfigurasi Aset</span>
           </div>
           <div id="historyList"></div>
         </div>
@@ -223,11 +243,12 @@
 <div id="modalSettings" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-head">
-      <span>Parameter Target</span>
+      <span>Parameter Terencana</span>
       <span style="cursor: pointer; color: var(--text-dim);" onclick="closeModal('modalSettings')">✕</span>
     </div>
     <div class="form-group"><label>Kuantitas Personel</label><input type="number" id="cfgPeople"></div>
     <div class="form-group"><label>Alokasi per Personel (Rp)</label><input type="number" id="cfgCost"></div>
+    <div class="form-group"><label>Target Tabungan Harian (Rp)</label><input type="number" id="cfgDaily" placeholder="Cth: 50000"></div>
     <button class="btn-primary" style="width: 100%; margin-top: 16px;" onclick="saveSettings()">Terapkan Parameter</button>
   </div>
 </div>
@@ -261,10 +282,16 @@ const db = getFirestore(app);
 
 let currentUser = null, userProfile = null, globalEntries = [], chartInst = null;
 
+// Utility Formatting Angka Desimal Indonesia
 const fmtRp = n => n == null ? '-' : 'Rp ' + Math.round(n).toLocaleString('id-ID');
 const fmtDt = ts => ts ? (ts.toDate ? ts.toDate() : new Date(ts)).toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric'}) : '-';
 
-window.showToast = msg => { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000); };
+window.showToast = (msg, type='') => { 
+  const t = document.getElementById('toast'); 
+  t.textContent = msg; 
+  t.className = type === 'alert' ? 'alert show' : 'show'; 
+  setTimeout(() => t.className = '', 3000); 
+};
 window.openModal = id => document.getElementById(id).classList.add('open');
 window.closeModal = id => document.getElementById(id).classList.remove('open');
 const switchScreen = id => { document.querySelectorAll('.screen').forEach(e => e.classList.remove('active')); document.getElementById(id).classList.add('active'); };
@@ -285,13 +312,13 @@ async function checkSession() {
 
 window.handleLogin = async () => {
   const u = document.getElementById('loginUsername').value.trim(), p = document.getElementById('loginPassword').value;
-  if (!u || !p) return showToast('Lengkapi mandat akses');
+  if (!u || !p) return showToast('Lengkapi mandat akses', 'alert');
   document.getElementById('loginBtn').innerText = 'Memverifikasi...';
   try {
     const q = query(collection(db, 'userProfiles'), where('username', '==', u), where('password', '==', p));
     const snap = await getDocs(q);
-    if (!snap.empty) { localStorage.setItem('sid_umroh', snap.docs[0].id); await checkSession(); } else showToast('Kredensial tidak valid');
-  } catch(e) { showToast('Koneksi terputus'); }
+    if (!snap.empty) { localStorage.setItem('sid_umroh', snap.docs[0].id); await checkSession(); } else showToast('Kredensial tidak valid', 'alert');
+  } catch(e) { showToast('Koneksi terputus', 'alert'); }
   document.getElementById('loginBtn').innerText = 'Otorisasi Akses';
 };
 
@@ -300,13 +327,21 @@ window.handleLogout = () => { localStorage.removeItem('sid_umroh'); currentUser 
 async function loadUser() {
   const p = userProfile;
   document.getElementById('userNavName').textContent = p.displayName;
+  
+  // Set default Input Date ke Hari Ini
+  document.getElementById('inputDate').valueAsDate = new Date();
+  
+  // Tampilkan label target harian
+  const dailyTgt = p.dailyTarget || 0;
+  document.getElementById('lblDailyTarget').textContent = dailyTgt > 0 ? fmtRp(dailyTgt) : 'Atur Target Dulu';
+
   const tgt = (p.numPeople || 1) * (p.costPerPerson || 0), saved = p.totalSaved || 0, rem = Math.max(0, tgt - saved);
   
   document.getElementById('uiTotalSaved').textContent = fmtRp(saved);
   document.getElementById('uiTotalTarget').textContent = fmtRp(tgt);
   document.getElementById('uiRemaining').textContent = fmtRp(rem);
   document.getElementById('uiProgressText').textContent = `${tgt > 0 ? (saved/tgt*100).toFixed(1) : 0}% terhimpun`;
-  document.getElementById('uiPeopleCount').textContent = `Untuk ${p.numPeople || 1} entitas`;
+  document.getElementById('uiPeopleCount').textContent = `Alokasi untuk ${p.numPeople || 1} entitas`;
 
   const q = query(collection(db, 'savingsEntries', currentUser.uid, 'logs'), orderBy('date', 'asc'));
   const snap = await getDocs(q);
@@ -324,7 +359,7 @@ function renderData(target, saved, rem) {
     document.getElementById('statActualMonthly').textContent = 'Rp 0';
     document.getElementById('uiEstDate').textContent = 'Data insufisien';
   } else {
-    listEl.innerHTML = [...globalEntries].reverse().slice(0, 6).map(e => `<div class="log-item"><div><div class="log-title">${e.note || 'Setoran'}</div><div class="log-date">${fmtDt(e.date)}</div></div><div class="log-amt">+ ${fmtRp(e.amount)}</div></div>`).join('');
+    listEl.innerHTML = [...globalEntries].reverse().slice(0, 6).map(e => `<div class="log-item"><div><div class="log-title">${e.note || 'Transaksi Terdata'}</div><div class="log-date">${fmtDt(e.date)}</div></div><div class="log-amt">+ ${fmtRp(e.amount)}</div></div>`).join('');
     
     const startObj = userProfile.startDate;
     const startMs = startObj ? (startObj.toDate ? startObj.toDate().getTime() : new Date(startObj).getTime()) : new Date().getTime();
@@ -344,15 +379,67 @@ function renderData(target, saved, rem) {
     } else document.getElementById('uiEstDate').textContent = 'Membutuhkan konsistensi';
   }
 
+  // Peningkatan Kualitas Chart & Format Angka
   const ctx = document.getElementById('mainChart').getContext('2d');
   if (chartInst) chartInst.destroy();
+  
+  // Create Gradient
+  let gradient = ctx.createLinearGradient(0, 0, 0, 320);
+  gradient.addColorStop(0, 'rgba(37, 99, 235, 0.4)');
+  gradient.addColorStop(1, 'rgba(37, 99, 235, 0.0)');
+
   let acc = 0; const lbls = [], pts = [];
   globalEntries.forEach(e => { acc += e.amount; lbls.push(fmtDt(e.date)); pts.push(acc); });
   if (!pts.length) { lbls.push(fmtDt(new Date())); pts.push(0); }
   
   chartInst = new Chart(ctx, {
-    type: 'line', data: { labels: lbls, datasets: [{ label: 'Realisasi Aset', data: pts, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.1)', fill: true, tension: 0.2 }, { label: 'Garis Target', data: Array(lbls.length).fill(target), borderColor: '#cbd5e1', borderDash: [4,4], pointRadius: 0 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp '+(v/1e6)+'M' } } } }
+    type: 'line', 
+    data: { 
+      labels: lbls, 
+      datasets: [
+        { 
+          label: 'Realisasi Aset', 
+          data: pts, 
+          borderColor: '#2563eb', 
+          backgroundColor: gradient, 
+          fill: true, 
+          tension: 0.4, // Kurva mulus
+          pointRadius: 0,
+          pointHoverRadius: 6,
+          borderWidth: 2
+        }, 
+        { 
+          label: 'Garis Target Total', 
+          data: Array(lbls.length).fill(target), 
+          borderColor: '#94a3b8', 
+          borderDash: [5,5], 
+          pointRadius: 0,
+          borderWidth: 1.5
+        }
+      ] 
+    },
+    options: { 
+      responsive: true, 
+      maintainAspectRatio: false, 
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: { 
+        legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } },
+        tooltip: {
+          callbacks: { label: (context) => 'Rp ' + context.parsed.y.toLocaleString('id-ID') }
+        }
+      }, 
+      scales: { 
+        y: { 
+          beginAtZero: true, 
+          grid: { color: '#e2e8f0', drawBorder: false },
+          ticks: { callback: v => 'Rp ' + v.toLocaleString('id-ID') } 
+        },
+        x: { grid: { display: false } }
+      } 
+    }
   });
 }
 
@@ -365,7 +452,7 @@ window.runSimulation = () => {
   const rem = Math.max(0, tgt - saved);
 
   if (rem <= 0) { resEl.innerHTML = "Aset telah memenuhi target operasional."; return; }
-  if (!amt || amt <= 0) { resEl.innerHTML = "Kalkulasi tertunda. Masukkan parameter nominal yang valid."; return; }
+  if (!amt || amt <= 0) { resEl.innerHTML = "Menunggu input parameter untuk melakukan proyeksi."; return; }
 
   const dailyInput = period === 'monthly' ? amt / 30 : amt;
   const daysLeft = Math.ceil(rem / dailyInput);
@@ -376,23 +463,65 @@ window.runSimulation = () => {
   resEl.innerHTML = `Dengan konstan menyetor <b>${fmtRp(amt)}</b> per ${period === 'monthly' ? 'bulan' : 'hari'}, defisit aset akan tertutup dalam kurun waktu <b>${timeStr}</b>. <br><br>Estimasi ketercapaian: <b>${fmtDt(estDate)}</b>.`;
 };
 
-window.submitSavings = async () => {
-  const a = parseFloat(document.getElementById('inputAmt').value), n = document.getElementById('inputNote').value.trim();
-  if (!a || a <= 0) return showToast('Nominal transaksi invalid');
-  try {
-    const nt = (userProfile.totalSaved || 0) + a;
-    await addDoc(collection(db, 'savingsEntries', currentUser.uid, 'logs'), { amount: a, note: n, date: serverTimestamp() });
-    await updateDoc(doc(db, 'userProfiles', currentUser.uid), { totalSaved: nt, lastSavedAt: serverTimestamp() });
-    userProfile.totalSaved = nt; document.getElementById('inputAmt').value = ''; document.getElementById('inputNote').value = '';
-    showToast('Transaksi terekam'); loadUser();
-  } catch(e) { showToast('Gagalan sistem pencatatan'); }
+// Logika Pencatatan Terpusat
+window.submitDailySavings = async () => {
+  const dateVal = document.getElementById('inputDate').value;
+  if(!dateVal) return showToast('Pilih tanggal transaksi', 'alert');
+  
+  const dailyAmt = parseFloat(userProfile.dailyTarget) || 0;
+  if(dailyAmt <= 0) return showToast('Harap atur Target Harian terlebih dahulu', 'alert');
+  
+  await executeTransaction(dailyAmt, 'Setoran Reguler', new Date(dateVal));
 };
 
-window.openSettingsModal = () => { document.getElementById('cfgPeople').value = userProfile.numPeople || 1; document.getElementById('cfgCost').value = userProfile.costPerPerson || 0; openModal('modalSettings'); };
+window.submitQuickAmount = async (amt) => {
+  const dateVal = document.getElementById('inputDate').value;
+  if(!dateVal) return showToast('Pilih tanggal transaksi', 'alert');
+  await executeTransaction(amt, 'Setoran Ekstra Cepat', new Date(dateVal));
+};
+
+window.submitCustomAmount = async () => {
+  const amt = parseFloat(document.getElementById('inputAmtCustom').value);
+  if(!amt || amt <= 0) return showToast('Nominal tidak valid', 'alert');
+  
+  const dateVal = document.getElementById('inputDate').value;
+  if(!dateVal) return showToast('Pilih tanggal transaksi', 'alert');
+  
+  await executeTransaction(amt, 'Setoran Kustom', new Date(dateVal));
+};
+
+async function executeTransaction(amount, note, dateObj) {
+  try {
+    const nt = (userProfile.totalSaved || 0) + amount;
+    // Set jam transaksi ke waktu saat ini agar sorting berurutan meskipun di hari yang sama
+    const now = new Date();
+    dateObj.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+
+    await addDoc(collection(db, 'savingsEntries', currentUser.uid, 'logs'), { amount: amount, note: note, date: dateObj });
+    await updateDoc(doc(db, 'userProfiles', currentUser.uid), { totalSaved: nt, lastSavedAt: serverTimestamp() });
+    
+    userProfile.totalSaved = nt; 
+    document.getElementById('inputAmtCustom').value = ''; 
+    showToast('Transaksi berhasil dibukukan'); 
+    loadUser();
+  } catch(e) { showToast('Kegagalan sistem pencatatan', 'alert'); }
+}
+
+// Konfigurasi Parameter (Modal)
+window.openSettingsModal = () => { 
+  document.getElementById('cfgPeople').value = userProfile.numPeople || 1; 
+  document.getElementById('cfgCost').value = userProfile.costPerPerson || 0; 
+  document.getElementById('cfgDaily').value = userProfile.dailyTarget || 0;
+  openModal('modalSettings'); 
+};
 window.saveSettings = async () => {
-  const p = parseInt(document.getElementById('cfgPeople').value) || 1, c = parseFloat(document.getElementById('cfgCost').value) || 0;
-  await updateDoc(doc(db, 'userProfiles', currentUser.uid), { numPeople: p, costPerPerson: c });
-  userProfile.numPeople = p; userProfile.costPerPerson = c; closeModal('modalSettings'); loadUser(); showToast('Konfigurasi sinkron');
+  const p = parseInt(document.getElementById('cfgPeople').value) || 1;
+  const c = parseFloat(document.getElementById('cfgCost').value) || 0;
+  const d = parseFloat(document.getElementById('cfgDaily').value) || 0;
+
+  await updateDoc(doc(db, 'userProfiles', currentUser.uid), { numPeople: p, costPerPerson: c, dailyTarget: d });
+  userProfile.numPeople = p; userProfile.costPerPerson = c; userProfile.dailyTarget = d;
+  closeModal('modalSettings'); loadUser(); showToast('Konfigurasi tersinkronisasi');
 };
 
 async function loadAdmin() {
@@ -416,10 +545,10 @@ async function loadAdmin() {
 
 window.registerClient = async () => {
   const nm = document.getElementById('regName').value, ur = document.getElementById('regUser').value, pw = document.getElementById('regPass').value, pp = parseInt(document.getElementById('regPeople').value)||1, cs = parseFloat(document.getElementById('regCost').value)||0;
-  if(!nm || !ur || !pw) return showToast('Data krusial tidak lengkap');
+  if(!nm || !ur || !pw) return showToast('Data krusial tidak lengkap', 'alert');
   const c = await getDocs(query(collection(db, 'userProfiles'), where('username','==',ur)));
-  if(!c.empty) return showToast('Identitas akses duplikat');
-  await addDoc(collection(db, 'userProfiles'), { displayName: nm, username: ur, password: pw, role: 'user', numPeople: pp, costPerPerson: cs, totalSaved: 0, startDate: serverTimestamp() });
+  if(!c.empty) return showToast('Identitas akses duplikat', 'alert');
+  await addDoc(collection(db, 'userProfiles'), { displayName: nm, username: ur, password: pw, role: 'user', numPeople: pp, costPerPerson: cs, totalSaved: 0, dailyTarget: 0, startDate: serverTimestamp() });
   closeModal('modalAddUser'); showToast('Klien terdaftar'); loadAdmin();
 };
 </script>
